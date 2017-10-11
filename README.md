@@ -5,10 +5,12 @@ It's implemented through a R package rGMAP.
 
 
 ## Install
+```
 library(devtools)
 install_github("wbaopaul/rGMAP")
+library(rGAMP)
 help(rGAMP)
-
+```
 
 ## Reference
 Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535
