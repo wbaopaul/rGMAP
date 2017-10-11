@@ -17,7 +17,6 @@ install_github("wbaopaul/rGMAP")
 * Output: a data frame shows the coordinates of the identified hierarchical domains
 
 * Detailed instruction can be found by:
-
 ```
 library(rGAMP)
 help(rGAMP)
