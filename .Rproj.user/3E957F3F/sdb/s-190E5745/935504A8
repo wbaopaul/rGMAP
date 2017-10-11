@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "Package: rGMAP\nType: Package\nTitle: Call hierarchical chromatin domains from HiC matrix by GMAP\nVersion: 1.2\nDate: 2017-10-10\nAuthor: Wenbao Yu\nMaintainer: Wenbao Yu <yuw1@email.chop.edu>\nDescription: More about what it does (maybe more than one line)\nLicense: GPL (>= 2)\nLazyData: TRUE\nImports:\n    data.table,\n    mclust,\n    EMD,\n    caTools,\n    Matrix,\n    HiCseg,\n    Rcpp (>= 0.12.5)\nLinkingTo: Rcpp\nRoxygenNote: 5.0.1\n",
+    "created" : 1484263957449.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "963394878",
+    "id" : "935504A8",
+    "lastKnownWriteTime" : 1507748640,
+    "last_content_update" : 1507748640627,
+    "path" : "/mnt/isilon/cbmi/tan_lab/yuw1/R-work-dir/TAD_calling/rGMAP/DESCRIPTION",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "dcf"
+}

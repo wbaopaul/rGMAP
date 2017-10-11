@@ -1,0 +1,20 @@
+Package: rGMAP
+Type: Package
+Title: Call hierarchical chromatin domains from HiC matrix by GMAP
+Version: 1.2
+Date: 2017-10-10
+Author: Wenbao Yu
+Maintainer: Wenbao Yu <yuw1@email.chop.edu>
+Description: More about what it does (maybe more than one line)
+License: GPL (>= 2)
+LazyData: TRUE
+Imports:
+    data.table,
+    mclust,
+    EMD,
+    caTools,
+    Matrix,
+    HiCseg,
+    Rcpp (>= 0.12.5)
+LinkingTo: Rcpp
+RoxygenNote: 6.0.1

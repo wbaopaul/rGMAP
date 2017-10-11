@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#include <Rcpp.h>\nusing namespace Rcpp;\n\n// This is a simple example of exporting a C++ function to R. You can\n// source this function into an R session using the Rcpp::sourceCpp\n// function (or via the Source button on the editor toolbar). Learn\n// more about Rcpp at:\n//\n//   http://www.rcpp.org/\n//   http://adv-r.had.co.nz/Rcpp.html\n//   http://gallery.rcpp.org/\n//\n\n\n// filter triple that has monotonic pattern and valley pattern\nNumericVector filt_pattn(NumericVector peaks, NumericVector stat, int dist) {\n  int len = peaks.size();\n  int i=1, a, b, c;\n\n  //remove valley pattern\n  while(i < (len-1)){\n    a = peaks[i] - 1;\n    b = peaks[i - 1] - 1;\n    c = peaks[i + 1] - 1;\n    if((c - b <= dist) && (stat[a] < stat[b]) && (stat[a] < stat[c])){\n      IntegerVector idx = seq_len(len) - 1;\n      // Rcout << i << std::endl;\n      peaks = peaks[idx != i];\n      len = peaks.size();\n      i = 1;\n    }\n    else{\n      i += 1;\n    }\n  }\n\n  // remove monotonic pattern\n  i = 1;\n  while(i < (len - 1)){\n    a = peaks[i] - 1;\n    b = peaks[i - 1] - 1;\n    c = peaks[i + 1] - 1;\n    if((a - b <= dist) && (c - a <= dist) && (stat[a] > stat[b]) && (stat[c] > stat[a])){\n        IntegerVector idx = seq_len(len) - 1;\n        // Rcout << i << std::endl;\n        peaks = peaks[idx != i];\n        len = peaks.size();\n        i = 1;\n    }\n    else{\n      i += 1;\n    }\n  }\n  return peaks;\n}\n\n\n// [[Rcpp::export]]\nNumericVector combPeaks(NumericVector peaks, NumericVector stat, int dist) {\n  // recursively combine peaks that are too close\n\n  // filter out pattern\n  peaks = filt_pattn(peaks, stat, dist);\n\n  int nn = peaks.size();\n  int current_peak, next_peak, i=0;\n  std::vector<int> new_peaks;\n  std::vector<int> del_peaks;\n\n  current_peak = peaks[0];\n  new_peaks.push_back(current_peak);\n\n  while(i < nn-1){\n    next_peak = peaks[i + 1];\n    // whether current peak and next peak are close\n    if(next_peak - current_peak <= dist){\n     // which one has bigger stat\n     if(stat[current_peak] > stat[next_peak]){\n       del_peaks.push_back(next_peak);\n       i++;\n     }else{\n       del_peaks.push_back(current_peak);\n       new_peaks.pop_back();\n       new_peaks.push_back(next_peak);\n       current_peak = next_peak;\n       i++;\n     }\n    }else{\n      new_peaks.push_back(next_peak);\n      current_peak = next_peak;\n      i++;\n    }\n  }\n\n  return wrap(new_peaks);\n}\n\n\n",
+    "created" : 1484264438566.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3689865485",
+    "id" : "A5801113",
+    "lastKnownWriteTime" : 1484263339,
+    "last_content_update" : 0,
+    "path" : "/mnt/isilon/cbmi/tan_lab/yuw1/R-work-dir/TAD_calling/rGMAP/src/combine_localPeaks.cpp",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "cpp"
+}
