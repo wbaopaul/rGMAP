@@ -4,7 +4,7 @@ GMAP is an algorithm to call topologically associating domains (TAD) and subdoma
 It's implemented through a R package rGMAP.
 
 
-## Install
+## Installation and Usage
 ```
 library(devtools)
 install_github("wbaopaul/rGMAP")
@@ -13,5 +13,8 @@ help(rGAMP)
 ```
 
 ## Reference
-Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535
+The detailed information of GMAP algorithm is described in the following paper:
+
+[Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535. ](http://doi.org/10.1038/s41467-017-00478-8)
+
 
