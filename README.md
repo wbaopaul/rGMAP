@@ -11,8 +11,8 @@ install_github("wbaopaul/rGMAP")
 ```
 ## Usage
 * Input:
-  - The Input is either a 3 columns Hi-C map, corrsponding to <bin1><bin2><counts> for a given chromosome
-  - Or a n by n matrix, n is the total number of bins for a chromosome
+  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row corrsponding to the start bin, end bin and the contact number for a contact
+  - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output: a data frame shows the coordinates of the identified hierarchical domains
 ```
