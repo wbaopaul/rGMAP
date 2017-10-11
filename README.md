@@ -15,6 +15,9 @@ install_github("wbaopaul/rGMAP")
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output: a data frame shows the coordinates of the identified hierarchical domains
+
+* Detailed instruction can be found by:
+
 ```
 library(rGAMP)
 help(rGAMP)
