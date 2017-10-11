@@ -4,11 +4,18 @@ GMAP is an algorithm to call topologically associating domains (TAD) and subdoma
 It's implemented through a R package rGMAP.
 
 
-## Installation and Usage
-* In R
+## Installation 
 ```
 library(devtools)
 install_github("wbaopaul/rGMAP")
+```
+## Usage
+* Input:
+  -The Input is either a 3 columns Hi-C map, corrsponding to <bin1><bin2><counts> for a given chromosome
+  -Or a n by n matrix, n is the total number of bins for a chromosome
+
+* Output: a data frame shows the coordinates of the identified hierarchical domains
+```
 library(rGAMP)
 help(rGAMP)
 ```
