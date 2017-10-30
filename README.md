@@ -15,7 +15,7 @@ install_github("wbaopaul/rGMAP")
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output:
-  - data frames include the coordinates of the identified hierarchical domains
+  - data frames providing the coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
 * Detailed instruction and an example can be found by:
