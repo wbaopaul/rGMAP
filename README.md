@@ -16,7 +16,7 @@ install_github("wbaopaul/rGMAP")
 
 * Output: a data frame shows the coordinates of the identified hierarchical domains
 
-* Detailed instruction can be found by:
+* Detailed instruction and an example can be found by:
 ```
 library(rGAMP)
 help(rGAMP)
@@ -24,7 +24,7 @@ help(rGAMP)
 # use example data from Rao et al. (2014)
 hic_rao_IMR90_chr15
 
-res = rGMAP(hic_rao_IMR90_chr15)
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order =2, bthr = 0.9)
 
 names(res)
 
