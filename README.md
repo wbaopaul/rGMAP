@@ -20,6 +20,15 @@ install_github("wbaopaul/rGMAP")
 ```
 library(rGAMP)
 help(rGAMP)
+
+# use example data from Rao et al. (2014)
+hic_rao_IMR90_chr15
+
+res = rGMAP(hic_rao_IMR90_chr15)
+
+names(res)
+
+
 ```
 
 ## Reference
