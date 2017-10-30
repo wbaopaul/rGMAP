@@ -14,9 +14,12 @@ install_github("wbaopaul/rGMAP")
   - The Input is either a 3 columns Hi-C map for a given chromosome, with each row corrsponding to the start bin, end bin and the contact number for a contact
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
-* Output: a data frame shows the coordinates of the identified hierarchical domains
+* Output:
+  - data frames include the coordinates of the identified hierarchical domains
+  - the final parameters for calling TADs
 
 * Detailed instruction and an example can be found by:
+
 ```
 library(rGAMP)
 help(rGAMP)
