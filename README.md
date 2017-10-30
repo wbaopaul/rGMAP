@@ -24,17 +24,17 @@ install_github("wbaopaul/rGMAP")
 library(rGAMP)
 help(rGAMP)
 
-## use example data from Rao et al. (2014 Cell)
+## use an example data from Rao et al. (2014 Cell)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
-
 res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2, bthr = 400)
-
 names(res)
 
 
-## quickly visualize some hierarchical domaisn
+## quickly visualize some hierarchical domains
 pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 6500, 20, 10)
 pp$p2
+
+
 
 ## for more information of usage of plotdom
 help(plotdom)
