@@ -14,7 +14,6 @@ Imports:
     EMD,
     caTools,
     Matrix,
-    HiCseg,
     Rcpp (>= 0.12.5)
 LinkingTo: Rcpp
 RoxygenNote: 6.0.1

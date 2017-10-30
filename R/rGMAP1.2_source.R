@@ -939,35 +939,6 @@ rGMAP = cmpfun(rGMAP)
 
 
 
-
-## call tad by method from HiCseg package
-#' @export
-tad_hicseg <- function(hic_mat, Kmax=12, distr = 'G', resl=1, model = 'D'){
-  if(ncol(hic_mat) == 3){
-    names(hic_mat) = c('n1', 'n2', 'counts')
-
-    if(distr == 'P') hic_mat$counts = round(hic_mat$counts)
-    hic_mat = sparseMatrix(i = hic_mat$n1, j = hic_mat$n2, x=hic_mat$counts,
-                           symmetric = T )
-  }
-
-  hic_mat = as.matrix(hic_mat)
-  hic_mat[is.na(hic_mat)] = 0L
-  options(scipen = 10)
-
-  n = nrow(hic_mat)
-  res = HiCseg_linkC_R(n, Kmax, distr, hic_mat, model = model)
-  ind = max(1, which.max(res$J))
-  chg_points = res$t_est_mat[ind, 1:ind]
-  chg_points = c(1, chg_points)
-  tad_seg = full_seg(chg_points) * resl
-  return(tad_seg)
-}
-
-
-
-
-
 ## generate simulated hic_mat and true tads
 #' @export
 data_simu <- function(stype = 'poisson', nratio = 2.5, mu0 = 20, resl = 1){
