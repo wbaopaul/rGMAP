@@ -10,6 +10,7 @@ License: GPL (>= 2)
 LazyData: TRUE
 Imports:
     data.table,
+    ggplot2,
     mclust,
     EMD,
     caTools,

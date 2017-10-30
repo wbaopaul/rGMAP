@@ -1343,3 +1343,162 @@ data_simu <- function(stype = 'poisson', nratio = 2.5, mu0 = 20, resl = 1){
   return(list("hic_mat" = hic_mat, "tads_true" = tads_true, 'hierTads' = hierTads))
 }
 data_simu = cmpfun(data_simu)
+
+
+
+## transfer tad to be in triangle shape
+triangle_tad <- function(tads, resl = 1){
+  pos <- within(tads, {
+    y <- end/resl
+    x <- start/resl
+    rm(start, end)
+  })
+
+  # to plot a tad in a triangle shape
+  triangle_tran <- function(x){
+    yy = matrix(0, 3, 2)
+    yy[1, ] = c(x[1], x[1])
+    yy[2, ] = c(x[1], x[2])
+    yy[3, ] = c(x[2], x[2])
+    return(yy)
+  }
+
+  xy = NULL
+  pos = as.matrix(pos)
+  for(i in 1:nrow(pos)){
+    xy = rbind(xy, triangle_tran(pos[i, ]))
+  }
+  return(xy)
+}
+
+
+## transferd triangle TADs for better visualization (horizontally arranged)
+transf_tad_horz <- function(triangle_tad){
+  xy_tad = as.matrix(triangle_tad)
+  transf_mat = matrix(c(1, -1, 1, 1), 2, 2)/2
+  #transf_mat = matrix(c(1, -1, 1, 1), 2, 2)/sqrt(2)
+  xy_new =  transf_mat %*% t(xy_tad)
+  return(t(xy_new))
+}
+
+
+
+
+#' visualize hierarchical domains
+#' @param  hic_mat hic_mat with 3 columns
+#' matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
+#' @param  hiertads_gmap the hierarchical domains called by gmap
+#' @param start_bin the start bin of the genome
+#' @param end_bin the end bin of the genome
+#' @param cthr the count threshold for color, default 20
+#' @param kb_resl reslution of Hi-C data in kb
+#' @rdname plotdom
+#' @export
+plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_resl = 10){
+
+  resl = kb_resl * 1000
+
+  names(hiertads_gmap) = c('start', 'end', 'dom_order')
+  names(hic_dat) = c('n1', 'n2', 'count')
+
+
+  tads_gmap = subset(hiertads_gmap, dom_order == 1, select = -dom_order)
+  tadsL2 = subset(hiertads_gmap, dom_order == 2, select = -dom_order)
+  tadsL3 = subset(hiertads_gmap, dom_order == 3, select = -dom_order)
+
+  ## plot tads_gmap (select region)
+  xy_gmap = triangle_tad(tads_gmap, resl = resl)
+  if(nrow(tadsL2) > 0 )xy_tadsL2 = triangle_tad(tadsL2, resl = resl)
+  if(nrow(tadsL3) > 0 ) xy_tadsL3 = triangle_tad(tadsL3, resl = resl)
+
+
+  ## plot it horizontally
+  hxy_gmap = transf_tad_horz(xy_gmap)
+  if(nrow(tadsL2) > 0 ) hxy_tadsL2 = transf_tad_horz(xy_tadsL2)
+  if(nrow(tadsL3) > 0 )hxy_tadsL3 = transf_tad_horz(xy_tadsL3)
+
+
+  mm = start_bin
+  MM = end_bin
+  dat = data.frame(hic_dat)
+  pdat = subset(dat, n1<=MM & n1 >= mm & n2 <= MM & n2 >= mm)
+  pdat$count = ifelse(pdat$count >cthr, cthr, pdat$count)
+
+  orgPlot <- ggplot(data = pdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
+    scale_colour_gradient(high='red', low = 'white') + xlim(min(pdat$n1), max(pdat$n1))
+
+  #orgPlot
+
+
+  ## plot it in horizontal triangle
+  hdat = pdat[pdat$n1 <= pdat$n2, ]
+  hdat[, 1:2] = transf_tad_horz(as.matrix(hdat[, 1:2]))
+
+  hdat = hdat[hdat$n2 <= 100, ]
+  #hdat$count = ifelse(hdat$count > 30, 30, hdat$count)
+
+
+  cols = colorRampPalette(c("white", "red"))(2)
+
+  #library(RColorBrewer)
+  #cols <- brewer.pal(10, 'Reds')
+  ss = 10^6/resl       ## plot in scale of mb
+  hdat$n1 = hdat$n1/ss
+  #dd = sample(1:nrow(hdat), 20000)
+  #hdat = hdat[dd, ]
+  orgPlot <- ggplot(data = hdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
+    scale_colour_gradient(high = 'red', low = 'white') + xlim(min(hdat$n1), max(hdat$n1)) +
+    xlab('Mb') + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+                                  legend.position = 'none') + theme(
+                                    plot.background = element_blank()
+                                    ,panel.grid.major = element_blank()
+                                    ,panel.grid.minor = element_blank()
+                                    ,panel.border = element_blank())
+
+  #orgPlot
+
+
+
+  orgWTad_horz <- function(xy, m = mm, M = MM){
+    ind1 = which(xy[, 1]>= m & xy[, 1]<= M)
+    if(length(ind1) <= 1) return(NULL)
+    xy = xy[ind1, ]
+    df = data.frame('xs' = xy[1:(nrow(xy)-1), 1]/ss,
+                    'ys' = xy[1:(nrow(xy)-1), 2],
+                    "xe" = xy[2:nrow(xy), 1]/ss,
+                    "ye" = xy[2:nrow(xy), 2])
+    return(df)
+  }
+
+  p1 = p2 = p3 = orgPlot
+
+  if(!is.null(orgWTad_horz(hxy_gmap))) {
+    tdat = orgWTad_horz(hxy_gmap)
+    tdat = tdat[order(tdat$xs), ]
+    tdat = tdat[tdat$xs <= tdat$xe,]
+    p1 <- p1 + geom_segment(aes(x = xs, y = ys, xend = xe, yend = ye), size = 0.7,
+                            data = tdat, color = 'black')
+    p2 = p1
+  }
+
+  if(nrow(tadsL2) > 0 ){
+    if(!is.null(orgWTad_horz(hxy_tadsL2))){
+      p2 = p2 + geom_segment(aes(x = xs, y = ys, xend = xe, yend = ye), size = 0.7,
+                             data = orgWTad_horz(hxy_tadsL2), color = 'black')
+      p3 = p2
+    }
+  }
+
+
+  if(nrow(tadsL3) > 0 ){
+    if(!is.null(orgWTad_horz(hxy_tadsL3))) {
+      p3 = p2 + geom_segment(aes(x = xs, y = ys, xend = xe, yend = ye), size = 0.7,
+                             data = orgWTad_horz(hxy_tadsL3), color = 'black')
+    }
+  }
+
+
+  return(list('p1' = p1, 'p2' = p2, 'p3' = p3))
+}
+plotdom = cmpfun(plotdom)
+
