@@ -1,7 +1,7 @@
-# GMAP: identifying TADs and subTADs from Hi-C data
+# GMAP: identifying TADs and subTADs from Hi-C experiment
 
 GMAP is an algorithm to call topologically associating domains (TAD) and subdomains (subTAD) from normalized Hi-C data.
-It's implemented through a R package rGMAP.
+It's implemented through a R package *rGMAP*.
 
 
 ## Installation 
@@ -11,11 +11,11 @@ install_github("wbaopaul/rGMAP")
 ```
 ## Usage
 * Input:
-  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row corrsponding to the start bin, end bin and the contact number for a contact
+  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin, end bin and the contact number for a contact
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output:
-  - data frames providing the coordinates of the identified hierarchical domains
+  - data frames providing the genomic coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
 * Detailed instruction and an example can be found by:
