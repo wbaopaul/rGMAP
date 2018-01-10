@@ -820,25 +820,41 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                     bthr, t1thr)
   tads = res$tads
   if(is.null(tads)) {
-    message(">>> No tads: probably because Bg_d is specified too small or bthr too big!")
+    message(">>> No tads: probably because Bg_d is specified too small or bthr, t1thr too big!")
     message(">>> first try: decrease bthr")
     res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr,
                       floor(bthr*0.8), t1thr)
     tads = res$tads
     if(is.null(tads)){
-      message(">>> second try: incease Bg_d")
+      message(">>> second try: increase Bg_d")
       res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d * 2 ,
                         fcthr, hthr,
                         bthr, t1thr)
       tads = res$tads
     }
     if(is.null(tads)){
-      message(">>> third try: decrease bthr and double Bg_d")
+      message(">>> third try: decrease t1thr")
+      res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d ,
+                        fcthr, hthr,
+                        bthr, t1thr = 0.5)
+      tads = res$tads
+    }
+    if(is.null(tads)){
+      message(">>> fourth try: decrease bthr and double Bg_d")
       res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d *2,
                         fcthr, hthr,
                         floor(bthr*0.8), t1thr)
       tads = res$tads
     }
+
+    if(is.null(tads)){
+      message(">>> fifth try: decrease bthr and t1thr, and double Bg_d")
+      res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d *2,
+                        fcthr, hthr,
+                        floor(bthr*0.8), t1thr = 0.5)
+      tads = res$tads
+    }
+
 
     if(is.null(tads)){
       message(">>> Give up, No tads detected!")
