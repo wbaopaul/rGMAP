@@ -11,7 +11,7 @@ install_github("wbaopaul/rGMAP")
 ```
 ## Usage
 * Input:
-  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin, end bin and the contact number for a contact
+  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin index, end bin index and the normalized counts (score) for a contact
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output:
@@ -26,6 +26,8 @@ help(rGAMP)
 
 ## use an example data from Rao et al. (2014 Cell)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
+head(hic_rao_IMR90_chr15)
+
 res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2, bthr = 400)
 names(res)
 
