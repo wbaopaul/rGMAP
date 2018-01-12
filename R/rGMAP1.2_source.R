@@ -774,7 +774,7 @@ call_domain = cmpfun(call_domain)
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                   min_d = 50, Max_d = 200, min_dp = 5, Max_dp = 10,
                   Bg_d = 200, hthr = 0.9,
-                  bthr = 400, t1thr = 0.75, fcthr = 0.9){
+                  bthr = 400, t1thr = 0.75, fcthr = 0.75){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
@@ -823,7 +823,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
     message(">>> No tads: probably because Bg_d is specified too small or bthr, t1thr too big!")
     message(">>> first try: decrease bthr")
     res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr,
-                      floor(bthr*0.8), t1thr)
+                      floor(bthr*0.5), t1thr)
     tads = res$tads
     if(is.null(tads)){
       message(">>> second try: increase Bg_d")
@@ -840,18 +840,25 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
       tads = res$tads
     }
     if(is.null(tads)){
+
+      res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d ,
+                        fcthr = 0.5, hthr,
+                        bthr, t1thr = 0.5)
+      tads = res$tads
+    }
+    if(is.null(tads)){
       message(">>> fourth try: decrease bthr and double Bg_d")
       res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d *2,
                         fcthr, hthr,
-                        floor(bthr*0.8), t1thr)
+                        floor(bthr*0.5), t1thr)
       tads = res$tads
     }
 
     if(is.null(tads)){
       message(">>> fifth try: decrease bthr and t1thr, and double Bg_d")
       res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d *2,
-                        fcthr, hthr,
-                        floor(bthr*0.8), t1thr = 0.5)
+                        fcthr = 0.5, hthr,
+                        floor(bthr*0.5), t1thr = 0.5)
       tads = res$tads
     }
 
