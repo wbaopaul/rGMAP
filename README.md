@@ -14,7 +14,7 @@ install_github("wbaopaul/rGMAP")
 Download source package here https://www.dropbox.com/s/ami6hopkl6c6wlk/rGMAP_1.2.tar.gz?dl=0
 and then install it in R by:
 ```
-install.packages('rGMAP_1.2.tar.gz', type = source, rep = NULL)
+install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
 ```
 
 ## Usage
