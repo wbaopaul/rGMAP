@@ -9,6 +9,14 @@ It's implemented through a R package *rGMAP*.
 library(devtools)
 install_github("wbaopaul/rGMAP")
 ```
+
+## Alternative installation if you cannot install it directly from github
+Download source package here https://www.dropbox.com/s/ami6hopkl6c6wlk/rGMAP_1.2.tar.gz?dl=0
+and then install it in R by:
+```
+install.packages('rGMAP_1.2.tar.gz', type = source, rep = NULL)
+```
+
 ## Usage
 * Input:
   - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin index, end bin index and the normalized counts (score) for a contact
