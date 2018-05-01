@@ -18,11 +18,11 @@ install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
 ```
 
 ## Usage
-* Input:
+* **Input:**
   - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin index, end bin index and the normalized counts (score) for a contact. **Note the first two columns should be in the unit of bin**.
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
-* Output:
+* **Output:**
   - data frames providing the genomic coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
