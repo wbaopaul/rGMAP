@@ -26,7 +26,7 @@ install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
   - data frames providing the genomic coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
-* Detailed instruction and an example can be found by:
+* **Example**: 
 
 ```
 library(rGAMP)
