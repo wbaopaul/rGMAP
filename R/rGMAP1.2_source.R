@@ -449,8 +449,8 @@ tune_allPara = cmpfun(tune_allPara)
 
 
 
-## remove redundant domains and add false gaps
-domain_correction <- function(subTads, pp, rnum_bk, tnum_bk){
+## remove redundant domains
+rm_fpdomain <- function(subTads, pp, rnum_bk, tnum_bk){
 
   subTads = as.matrix(subTads)
   bds = sort(unique(as.vector(subTads)))
@@ -481,12 +481,12 @@ domain_correction <- function(subTads, pp, rnum_bk, tnum_bk){
 
   return(subTads)
 }
-domain_correction = cmpfun(domain_correction)
+rm_fpdomain = cmpfun(rm_fpdomain)
 
 
-## remove redundant domains and add false gaps locally
+## remove redundant domains
 ## dw represents dw up- and down- range of the current domain
-domain_correction_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
+rm_fpdomain_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
 
   subTads = as.matrix(subTads)
   bds = sort(unique(as.vector(subTads)))
@@ -496,16 +496,19 @@ domain_correction_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
 
   s_density = round(apply(subTads, 1, function(x) mean(pp[x[1]:x[2], x[1]:x[2]])), 2)
   tsize = round(apply(subTads, 1, function(x) x[2] - x[1]))
+  midp = apply(subTads, 1, function(x) floor(x[2]/2 + x[1]/2))
   nn = nrow(pp)
 
-  calDensity_expect_local <- function(tsize0, dw0 = dw){
-    ids = lapply(1:nn, function(x) return(cbind(x, c(max(1, x - dw0 * tsize0):min(nn, x + dw0 * tsize0)))))
+  calDensity_expect_local <- function(j, dw0 = dw){
+    tsize0 = tsize[j]
+    midp0 = midp[j]
+    ids = lapply(max(1, midp0 - dw0 * tsize0) : min(nn, midp0 + dw0 * tsize0), function(x) return(cbind(x, c(max(1, x - tsize0):min(nn, x + tsize0)))))
     ids = do.call('rbind', ids)
     return(round(mean(pp[ids]), 2))
   }
 
 
-  e_density = sapply(tsize, calDensity_expect_local)
+  e_density = sapply(1:length(tsize), calDensity_expect_local)
 
   #tmp = cbind(subTads, s_density, e_density, e_density*1.1)
   #write.table(tmp, file = 'tmp.txt', row.names = F, col.names = F, quote = F, sep = '\t')
@@ -517,7 +520,8 @@ domain_correction_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
 
   return(subTads)
 }
-domain_correction_local = cmpfun(domain_correction_local)
+rm_fpdomain_local = cmpfun(rm_fpdomain_local)
+
 
 
 
@@ -732,7 +736,7 @@ call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr
   subTads = res$tads
 
 
-  if(!is.null(subTads)) res$tads = domain_correction_local(subTads, pp, rnum_bk, tnum_bk)
+  if(!is.null(subTads)) res$tads = rm_fpdomain(subTads, pp, rnum_bk, tnum_bk)
   #if(!is.null(subTads)) res$tads = domain_correction(subTads, sub_mat, rnum_bk0, tnum_bk)
 
   return(res)
