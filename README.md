@@ -11,10 +11,9 @@ install_github("wbaopaul/rGMAP")
 ```
 
 ## Alternative installation if you cannot install it directly from github
-Download source package here https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0 
-(all versions stored) and then install it in R by:
+Download source package here https://www.dropbox.com/s/ami6hopkl6c6wlk/rGMAP_1.2.tar.gz?dl=0 and then install it in R by:
 ```
-install.packages('rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
+install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
 ```
 
 ## Usage
@@ -42,7 +41,7 @@ names(res)
 
 ## quickly visualize some hierarchical domains
 pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 6500, 30, 10)
-pp$p1
+pp$p2
 
 
 
