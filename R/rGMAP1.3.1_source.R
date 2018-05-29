@@ -119,9 +119,12 @@ localMaxima <- function(x,  stats1, thr = 0.75,  dp = 10) {
 
   y_fc = extrema(stats1)$maxindex[, 1]
 
-  y_mdist_fc = sapply(y, function(t) min(abs(t - y_fc)))
+  if(length(y_fc) > 0){
+    y_mdist_fc = sapply(y, function(t) min(abs(t - y_fc)))
 
-  y = y[y_mdist_fc <= 5]
+    y = y[y_mdist_fc <= 5]
+
+  }
   xy = x[y]
 
   # filter by t1
