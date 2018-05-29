@@ -583,112 +583,6 @@ gmixmodel <- function(sub_mat, hthr = 0.9, bthr = 200){
 gmixmodel = cmpfun(gmixmodel)
 
 
-## use default classification; using hthr quantile to cluster
-## only when gaussian mixture model is not converged
-gmixmodel0 <- function(sub_mat, hthr = 0.9, bthr = 200){
-  nn = nrow(sub_mat)
-  pp = matrix(0L, nn, nn)
-
-  # if the tad is too small (less than 10 bins), do not call subtad
-  if(nn <= 10) return(pp)
-
-  # do mixture model clustering
-
-    ## if the hic-matrix is too large, we assume two loci with distance larger than
-    ## say 1000 bins have no interactions. Data from this part will not be used for
-    ## constructing the mixture models
-    if(all(class(sub_mat) != "data.frame")) {
-      mat = data.frame(sub_mat)
-    }
-    mat = as.list(mat)  ## for faster subsetting
-
-    colIDs =  sapply(1:(nn - 1), function(x) return(c((x + 1) : min(nn, x + bthr))))
-    len = sapply(colIDs, length)
-
-    getData <- function(x){
-      return(mat[[x]][colIDs[[x]]])
-    }
-    temp = unlist(sapply(1:(nn - 1), getData))
-    rm(mat)
-
-
-
-    rowIDs = rep(1:(nn - 1), len)
-    colIDs = unlist(colIDs)
-
-    partialIDs = cbind(rowIDs, colIDs)
-    rm(rowIDs, colIDs)
-
-    # deal with outliers
-    class1 = rep(0, length(temp))
-
-    # deal with outliers
-
-    out.thr.upper = quantile(temp, 0.975)
-    out.thr.lower = max(quantile(temp, 0.025), 0)
-
-    id.lower = which(temp <= out.thr.lower)
-    id.upper = which(temp >= out.thr.upper)
-    ids = NULL
-
-    if(length(id.upper) > 0){
-      class1[id.upper] = 1
-      ids = c(id.lower, id.upper)
-      temp = temp[-ids]
-      class0 = class1[-ids]
-    }else{
-      if(length(id.lower) > 0){
-        ids = id.lower
-        temp = temp[-ids]
-        class0 = class1[-ids]
-      }else{
-        class0 = class1
-      }
-    }
-
-
-    if(length(unique(temp)) >= 2){
-      model2 <- Mclust(temp, G = 2, modelNames = 'E')
-
-      if(!is.null(model2)){
-        class0 = model2$classification - 1
-        if(mean(temp[class0 == 1]) <= mean(temp)) class0 = 1 - class0
-      }
-
-      if(is.null(model2)){ ## not covergent
-        message('Trying using models with different variances')
-        model2 <- Mclust(temp, G = 2, modelNames = 'V')
-        if(!is.null(model2)) {
-          class0 = model2$classification - 1
-          if(mean(temp[class0 == 1]) <= mean(temp)) class0 = 1 - class0
-        }else{
-          message('No models can be fitted, using hthr quantile as cutoff')
-          class0 = ifelse(temp > quantile(temp, hthr), 1, 0)
-        }
-      }
-
-      # just in case:
-      if(length(unique(class0)) == 1 )  class0 = ifelse(temp > quantile(temp, hthr), 1, 0)
-      rm(temp, model2)
-    }
-
-    if(length(ids) > 0) {
-      class1[-ids] = class0
-      pp[partialIDs] = class1
-    }else{
-      pp[partialIDs] = class0
-    }
-
-    pp = pp + t(pp)
-    rm(class0, partialIDs)
-
-  diag(pp) <- 0
-
-  return(pp)
-}
-gmixmodel0 = cmpfun(gmixmodel0)
-
-
 call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp,  hthr = 0.5,
                         bthr = 200, t1thr = 0.5){
 
@@ -769,7 +663,7 @@ call_domain = cmpfun(call_domain)
 #' @rdname rGMAP
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
-                  min_d = 25, Max_d = 100, min_dp = 5, Max_dp = 10,
+                  min_d = 25, Max_d = 100, min_dp = 10, Max_dp = 20,
                   hthr = 0.99, bthr = min(400, 400*10^3/resl), t1thr = 0.25){
 
   if(ncol(hic_mat) == 3){
