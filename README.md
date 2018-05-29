@@ -28,8 +28,8 @@ install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
 * **Example**: 
 
 ```
-library(rGAMP)
-help(rGAMP)
+library(rGMAP)
+help(rGMAP)
 
 ## use an example data from Rao et al. (2014 Cell)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
