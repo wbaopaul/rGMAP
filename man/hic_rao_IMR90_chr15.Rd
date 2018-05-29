@@ -11,7 +11,7 @@
   \item{count}{normalized counts}
 }}
 \source{
-A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping
+Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping
 }
 \usage{
 hic_rao_IMR90_chr15
