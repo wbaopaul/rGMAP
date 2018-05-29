@@ -42,7 +42,7 @@ names(res)
 
 ## quickly visualize some hierarchical domains
 pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 6500, 30, 10)
-pp$p2
+pp$p1
 
 
 
