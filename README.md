@@ -36,7 +36,7 @@ help(rGAMP)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
 head(hic_rao_IMR90_chr15)
 
-res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2, bthr = 400)
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
 names(res)
 
 
