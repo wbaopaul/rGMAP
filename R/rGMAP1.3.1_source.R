@@ -288,7 +288,7 @@ tune_insulScore <- function(pp, tads, wd = 50){
 
   }
 
-  score.summ = mean(insul.score) * log(length(insul.score[insul.score > 0]))
+  score.summ = mean(insul.score) * log(length(insul.score[insul.score > 0]) + 1)
   return(score.summ)
 }
 tune_insulScore = cmpfun(tune_insulScore)
