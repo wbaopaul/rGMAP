@@ -1,7 +1,7 @@
-# GMAP: identifying TADs and subTADs from Hi-C experiment
+# GMAP: identifying TADs and subTADs from Hi-C data
 
 GMAP is an algorithm to call topologically associating domains (TAD) and subdomains (subTAD) from normalized Hi-C data.
-It's implemented through a R package *rGMAP*.
+It's implemented through a R package rGMAP.
 
 
 ## Installation 
@@ -9,38 +9,29 @@ It's implemented through a R package *rGMAP*.
 library(devtools)
 install_github("wbaopaul/rGMAP")
 ```
-
-## Alternative installation if you cannot install it directly from github
-Download source package here https://www.dropbox.com/s/ami6hopkl6c6wlk/rGMAP_1.2.tar.gz?dl=0 and then install it in R by:
-```
-install.packages('rGMAP_1.2.tar.gz', type = 'source', rep = NULL)
-```
-
 ## Usage
-* **Input:**
-  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row represents the start bin index, end bin index and the normalized counts (score) for a contact. **Note the first two columns should be in the unit of bin**.
+* Input:
+  - The Input is either a 3 columns Hi-C map for a given chromosome, with each row corrsponding to the start bin, end bin and the contact number for a contact
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
-* **Output:**
-  - data frames providing the genomic coordinates of the identified hierarchical domains
+* Output:
+  - data frames providing the coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
-* **Example**: 
+* Detailed instruction and an example can be found by:
 
 ```
-library(rGMAP)
-help(rGMAP)
+library(rGAMP)
+help(rGAMP)
 
 ## use an example data from Rao et al. (2014 Cell)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
-head(hic_rao_IMR90_chr15)
-
-res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2, bthr = 400)
 names(res)
 
 
 ## quickly visualize some hierarchical domains
-pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 6500, 30, 10)
+pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 6500, 20, 10)
 pp$p2
 
 
