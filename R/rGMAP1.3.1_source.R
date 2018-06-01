@@ -681,7 +681,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
 
   hic_mat = as.matrix(hic_mat)
   hic_mat[is.na(hic_mat)] = 0L
-  hic_mat = round(hic_mat)
+  #hic_mat = round(hic_mat)
   options(scipen = 10)
 
 
@@ -701,9 +701,11 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
 
   ## do logtransformation
   if(logt){
-    hic_mat[which(hic_mat < 0, arr.ind = T)] = 0
+    if(any(hic_mat < 0)) stop('Cannot do log-transformation on negative counts!')
     hic_mat = log2(hic_mat + 1)
   }
+
+
 
   message(">>>> call TADs...")
   res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, hthr, bthr, t1thr)
@@ -774,7 +776,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
         Mdp = Max_dp
 
         tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             hthr = max(hthr, 0.9), floor(len/3), t1thr = max(t1thr, 0.9))
+                             hthr = max(hthr, 0.9), floor(len/2), t1thr = max(t1thr, 0.9))
 
         if(is.null(tmp0$tads)){
           message(paste('>>> no sub-TADs found!'))
