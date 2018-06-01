@@ -289,6 +289,7 @@ tune_insulScore <- function(pp, tads, wd = 50){
   }
 
   score.summ = mean(insul.score) * log(length(insul.score[insul.score > 0]) + 1)
+
   return(score.summ)
 }
 tune_insulScore = cmpfun(tune_insulScore)
@@ -306,7 +307,7 @@ tune_T1T2 <- function(pp, stats, stats1, d, dp, t1thr = 0.5){
   if(all(diff(stat_wb) <=0) || all(diff(stat_wb) >= 0)) return(list('score' = 0, 'tads' = NULL))
 
   # 75% quantile is too close to 99% quantile
-  if(max(stat_wb)- quantile(stat_wb, 0.75) < 1) return(list('score' = 0, 'tads' = NULL))
+  if(max(stat_wb)- quantile(stat_wb, 0.75) < 2) return(list('score' = 0, 'tads' = NULL))
 
   sthr = 0.05
   sthr0 = round(qnorm(sthr/nn, lower.tail = F), 1)
@@ -383,7 +384,7 @@ tune_allPara <- function(pp, pp1, candD, candDp,  t1thr = 0.5){
     di = candD[i]
     stats = cal_stat(pp, d = di)
     insul_ws = 25
-    if(nn <= 200) insul_ws = 10
+
     stats1 = lapply(1:nn, cal_insul, pp1, insul_ws)
     stats1 = do.call('c', stats1)
 
