@@ -669,7 +669,7 @@ call_domain = cmpfun(call_domain)
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                   min_d = 25, Max_d = 100, min_dp = 5, Max_dp = 10,
-                  hthr = 0.99, bthr = min(400, 400*10^3/resl), t1thr = 0.25){
+                  hthr = 0.99, bthr = min(300, 3*10^6/resl), t1thr = 0.25){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
