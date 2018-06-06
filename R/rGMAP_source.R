@@ -121,9 +121,11 @@ localMaxima <- function(x,  stats1, thr = 0.75,  dp = 10) {
 
   if(length(y_fc) > 0){
     y_mdist_fc = sapply(y, function(t) min(abs(t - y_fc)))
+    y_stat1 = stats1[y]
+    y = y[y_mdist_fc <= 3 & y_stat1 > 0.1]
 
-    y = y[y_mdist_fc <= 5]
-
+  }else{
+    return(NULL)
   }
   xy = x[y]
 
@@ -306,11 +308,12 @@ tune_T1T2 <- function(pp, stats, stats1, d, dp, t1thr = 0.5){
   # no local peaks
   if(all(diff(stat_wb) <=0) || all(diff(stat_wb) >= 0)) return(list('score' = 0, 'tads' = NULL))
 
-  # 75% quantile is too close to 99% quantile
-  if(max(stat_wb)- quantile(stat_wb, 0.75) < 2) return(list('score' = 0, 'tads' = NULL))
-
   sthr = 0.05
   sthr0 = round(qnorm(sthr/nn, lower.tail = F), 1)
+
+  # 75% quantile is too close to 99% quantile
+  if(quantile(stat_wb, 0.99) - quantile(stat_wb, 0.75) < 0.75 ) return(list('score' = 0, 'tads' = NULL))
+
 
   # give candidates for t1
   stat_wb = runmean(stat_wb, 5)
@@ -669,8 +672,8 @@ call_domain = cmpfun(call_domain)
 #' @rdname rGMAP
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
-                  min_d = 25, Max_d = 100, min_dp = 5, Max_dp = 10,
-                  hthr = 0.99, bthr = min(300, 3*10^6/resl), t1thr = 0.25){
+                  min_d = 20, Max_d = 100, min_dp = 5, Max_dp = 10,
+                  hthr = 0.99, bthr = min(300, 3*10^6/resl), t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
@@ -762,22 +765,22 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
         Sbin = parenTads[i, 1]
         Ebin = parenTads[i, 2]
         len = Ebin - Sbin + 1
-        if(len <= min(40, floor(500*1000/resl))) next
+        if(len <= min(50, floor(500*1000/resl))) next
 
         message(paste(">>>> call sub-domains for ", i, "th"," domain of order ", ll-1,
                       "...", sep = ""))
         message(paste("start from bin ", parenTads[i, 1], " to bin ", parenTads[i, 2], sep = ""))
 
 
-        md = min(200*1000/resl, min_d)
+        md = min(200*1000/resl, 10)
         Md = min(Max_d, floor(len/3))
         Md = max(md, Md)
 
-        mdp = min_dp
-        Mdp = Max_dp
+        mdp = 5
+        Mdp = 10
 
         tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             hthr = max(hthr, 0.9), floor(len/2), t1thr = max(t1thr, 0.9))
+                             hthr = max(hthr, 0.99), floor(len/2), t1thr = max(t1thr, 0.9))
 
         if(is.null(tmp0$tads)){
           message(paste('>>> no sub-TADs found!'))
