@@ -122,7 +122,7 @@ localMaxima <- function(x,  stats1, thr = 0.75,  dp = 10) {
   if(length(y_fc) > 0){
     y_mdist_fc = sapply(y, function(t) min(abs(t - y_fc)))
     y_stat1 = stats1[y]
-    y = y[y_mdist_fc <= 3 & y_stat1 > 0.1]
+    y = y[y_mdist_fc <= 3 & y_stat1 > 0]
 
   }else{
     return(NULL)
