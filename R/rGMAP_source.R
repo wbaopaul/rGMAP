@@ -485,6 +485,19 @@ rm_fpdomain_local = cmpfun(rm_fpdomain_local)
 ## transfrom hic normalized count to binary
 gmixmodel <- function(sub_mat, hthr = 0.9, bthr = 200){
   nn = nrow(sub_mat)
+  ## consider distance
+  exp_mat = matrix(0, nn, nn)
+  for(dist.bin in 0:(nn-1)){
+    row.ids = 1:(nn - dist.bin)
+    col.ids = row.ids + dist.bin
+    pids = cbind(row.ids, col.ids)
+    exp.n = mean(sub_mat[pids])
+    exp_mat[pids] = exp.n
+  }
+  exp_mat = exp_mat/2 + t(exp_mat)/2
+  sub_mat = sub_mat - exp_mat
+
+
   pp = matrix(0L, nn, nn)
 
   # if the tad is too small (less than 10 bins), do not call subtad
@@ -673,7 +686,7 @@ call_domain = cmpfun(call_domain)
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                   min_d = 20, Max_d = 100, min_dp = 5, Max_dp = 10,
-                  hthr = 0.99, bthr = min(300, 3*10^6/resl), t1thr = 0.5){
+                  hthr = 0.9, bthr = min(300, 3*10^6/resl), t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
@@ -780,7 +793,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
         Mdp = 10
 
         tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             hthr = max(hthr, 0.99), floor(len/2), t1thr = max(t1thr, 0.9))
+                             hthr = hthr, floor(len), t1thr = max(t1thr, 0.9))
 
         if(is.null(tmp0$tads)){
           message(paste('>>> no sub-TADs found!'))
