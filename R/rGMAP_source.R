@@ -491,7 +491,7 @@ gmixmodel <- function(sub_mat, hthr = 0.9, bthr = 200){
     row.ids = 1:(nn - dist.bin)
     col.ids = row.ids + dist.bin
     pids = cbind(row.ids, col.ids)
-    exp.n = mean(sub_mat[pids])
+    exp.n = mean(sub_mat[pids], trim = 0.025)
     exp_mat[pids] = exp.n
   }
   exp_mat = exp_mat/2 + t(exp_mat)/2
@@ -506,27 +506,10 @@ gmixmodel <- function(sub_mat, hthr = 0.9, bthr = 200){
     ## if the hic-matrix is too large, we assume two loci with distance larger than
     ## say 1000 bins have no interactions. Data from this part will not be used for
     ## constructing the mixture models
-    if(all(class(sub_mat) != "data.frame")) {
-      mat = data.frame(sub_mat)
-    }
-    mat = as.list(mat)  ## for faster subsetting
 
-    colIDs =  sapply(1:(nn - 1), function(x) return(c((x + 1) : min(nn, x + bthr))))
-    len = sapply(colIDs, length)
-
-    getData <- function(x){
-      return(mat[[x]][colIDs[[x]]])
-    }
-    temp = unlist(sapply(1:(nn - 1), getData))
-    rm(mat)
-
-
-
-    rowIDs = rep(1:(nn - 1), len)
-    colIDs = unlist(colIDs)
-
-    partialIDs = cbind(rowIDs, colIDs)
-    rm(rowIDs, colIDs)
+  partialIDs = sapply(1:(nn-1), function(x) return(cbind(x, c((x + 1):min(nn, x + bthr)))))
+  partialIDs = do.call('rbind', partialIDs)
+  temp = sub_mat[partialIDs]
 
     # deal with outliers
     class1 = rep(0, length(temp))
@@ -534,7 +517,8 @@ gmixmodel <- function(sub_mat, hthr = 0.9, bthr = 200){
     # deal with outliers
 
     out.thr.upper = quantile(temp, 0.975)
-    out.thr.lower = max(quantile(temp, 0.025), 0)
+    #out.thr.lower = max(quantile(temp, 0.025), 0)
+    out.thr.lower = quantile(temp, 0.025)
 
     id.lower = which(temp <= out.thr.lower)
     id.upper = which(temp >= out.thr.upper)
@@ -690,7 +674,8 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
-
+    hic_mat = data.table(hic_mat)
+    hic_mat = hic_mat[abs(n1 - n2) <= bthr]  ## keep contacts within bthr distance
 
     hic_mat = sparseMatrix(i = hic_mat$n1, j = hic_mat$n2, x=hic_mat$counts,
                            symmetric = T )
@@ -793,7 +778,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
         Mdp = 10
 
         tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             hthr = hthr, floor(len), t1thr = max(t1thr, 0.9))
+                             hthr = max(0.95, hthr), floor(len), t1thr = max(t1thr, 0.9))
 
         if(is.null(tmp0$tads)){
           message(paste('>>> no sub-TADs found!'))
