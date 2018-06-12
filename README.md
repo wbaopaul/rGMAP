@@ -4,10 +4,17 @@ GMAP is an algorithm to call topologically associating domains (TAD) and subdoma
 It's implemented through a R package rGMAP.
 
 
-## Installation 
+## Installation from Github 
 ```
 library(devtools)
 install_github("wbaopaul/rGMAP")
+```
+
+## Installation from source
+
+Download source codes in [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0) (previous versions are also included)
+```
+install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
 ```
 ## Usage
 * Input:
