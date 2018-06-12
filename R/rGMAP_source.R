@@ -930,7 +930,7 @@ rGMAP = cmpfun(rGMAP)
 #' poission- or nb- indicates poission distribution or negative bionomial distribution
 #' -hier indicated subtads are generated nestly
 #' @param nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
-#' @param mu0 The mean parameter for each contact domain
+#' @param mu0 The mean parameter, default 20
 #' @param resl Resolution, default set to 1
 #' @return A list includes following elements:
 #' \item{hic_mat}{n by n contact matrix}
