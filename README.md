@@ -34,15 +34,17 @@ names(res)
 pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 7000, 30, 10)
 pp$p2
 
-
-
 ## for more information of usage of plotdom
 help(plotdom)
 
 
 ## to generate simulated data proposed in the manuscript
-simu_mat = data_simu('poisson-dist-hier', nratio = 2, resl = 1)
-help(data_simu)  # to generate other scenarios
+simu_res = data_simu('poisson-dist-hier')
+true_domains = simu_res$hierTads
+simu_mat = simu_res$hic_mat
+help(data_simu)  # to generate other scenarios mentioned in the manuscript
+
+predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
 
 ```
 

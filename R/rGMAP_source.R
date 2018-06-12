@@ -738,19 +738,18 @@ call_domain = cmpfun(call_domain)
 
 
 #' Detect hierarchical choromotin domains by GMAP
-#' @param  hic_mat n by n matrix, n is the number of bins. Or hic_mat could by 3 columns
-#' matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
-#' index of a hic contact
+#' @param  hic_mat Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
+#' end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom
 #' @param  resl The resolution (bin size), default 10kb
 #' @param logt Do log-transformation or not, default TRUE
 #' @param dom_order Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
 #' @param  min_d The minimum d (d: window size), default 25
 #' @param  max_d The maximum d (d: window size), default 100
 #' @param min_dp The minmum dp (dp: lower bound of tad size), defalt 5
-#' @param max_dp The maximum dp (dp: lower bound of tad size), defalt 10
+#' @param max_dp The maximum dp (dp: lower bound of tad size), defalt 10.
 #'   min_d, max_d, min_dp and max_dp should be specified in number of bins
-#' @param maxDistInBin Threshold, default 200 bins, means
-#'         only consider contacts whose distance is not greater than 200 bins
+#' @param maxDistInBin Only consider contact whose distance is not greater than maxDistInBIn bins,
+#' default 200 bins
 #' @param hthr The lower bound cutoff for posterior probability, default 0.95
 #' @param t1thr Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
 #'        of TADs, 0.9 of subTADs
