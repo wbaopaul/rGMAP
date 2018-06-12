@@ -35,6 +35,7 @@ install.packages('path to rGMAP_1.3.tar.gz', repos = NULL, type = 'source')
 
 # Run an example data
 > Data from *Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping*
+
 > KR normalized Hi-C data for IMR90 cell line, on chr15 with resolution 10kb
 
 ```{r, fig.height=3, fig.width=15}
