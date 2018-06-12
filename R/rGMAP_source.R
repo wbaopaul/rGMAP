@@ -749,7 +749,7 @@ call_domain = cmpfun(call_domain)
 #' @param min_dp The minmum dp (dp: lower bound of tad size), defalt 5
 #' @param max_dp The maximum dp (dp: lower bound of tad size), defalt 10
 #'   min_d, max_d, min_dp and max_dp should be specified in number of bins
-#' @param maxDistInBin Threshold, default 200, means
+#' @param maxDistInBin Threshold, default 200 bins, means
 #'         only consider contacts whose distance is not greater than 200 bins
 #' @param hthr The lower bound cutoff for posterior probability, default 0.95
 #' @param t1thr Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
@@ -762,7 +762,7 @@ call_domain = cmpfun(call_domain)
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                   min_d = 20, max_d = 100, min_dp = 5, max_dp = 10,
-                  maxDistInBin = min(300, 3*10^6/resl), hthr = 0.95, t1thr = 0.5){
+                  maxDistInBin = min(200, 2*10^6/resl), hthr = 0.95, t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
@@ -924,13 +924,18 @@ rGMAP = cmpfun(rGMAP)
 
 
 
-## generate simulated hic_mat and true tads
+#' generate simulated hic_mat and true tads
 #' @param stype One of four types of simulated data in the manuscript:
 #' poission-dist, poission-dist-hier, nb-dist, nb-dist-hier;
 #' poission- or nb- indicates poission distribution or negative bionomial distribution
 #' -hier indicated subtads are generated nestly
-#' nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
-#' mu0 The mean parameter for each contact domain
+#' @param nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
+#' @param mu0 The mean parameter for each contact domain
+#' @return A list includes following elements:
+#' \item{hic_mat}{n by n contact matrix}
+#' \item{hierTads}{True heirarchical domains}
+#' \item{tads_true}{True TADs}
+#' @rdname data_simu
 #' @export
 data_simu <- function(stype = 'poisson-dist', nratio = 2.5, mu0 = 20, resl = 1){
 
