@@ -17,7 +17,6 @@ Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution revea
 hic_rao_IMR90_chr15
 }
 \description{
-A dataset containing the prices and other attributes of almost 54,000
-diamonds.
+Normalized Hi-C data for IMR90, chr15 with resolution 10kb.
 }
 \keyword{datasets}
