@@ -761,7 +761,7 @@ call_domain = cmpfun(call_domain)
 #' @rdname rGMAP
 #' @export
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
-                  min_d = 20, max_d = 100, min_dp = 5, max_dp = 10,
+                  min_d = 25, max_d = 100, min_dp = 5, max_dp = 10,
                   maxDistInBin = min(200, 2*10^6/resl), hthr = 0.95, t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
@@ -800,7 +800,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
   }
 
 
-
+  if(max_d > maxDistInBin) max_d = maxDistInBin
   message(">>>> call TADs...")
   res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr, maxDistInBin, t1thr)
   tads = res$tads
@@ -931,6 +931,7 @@ rGMAP = cmpfun(rGMAP)
 #' -hier indicated subtads are generated nestly
 #' @param nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
 #' @param mu0 The mean parameter for each contact domain
+#' @param resl Resolution, default set to 1
 #' @return A list includes following elements:
 #' \item{hic_mat}{n by n contact matrix}
 #' \item{hierTads}{True heirarchical domains}
