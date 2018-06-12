@@ -765,7 +765,7 @@ call_domain = cmpfun(call_domain)
 #'res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
 #'names(res)
 #' #quickly visualize some hierarchical domains
-#' pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 7000, 30, 10)
+#' pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 7000, 30, 10)
 #' pp$p2
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
                   maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
@@ -937,7 +937,7 @@ rGMAP = cmpfun(rGMAP)
 #' poission- or nb- indicates poission distribution or negative bionomial distribution
 #' -hier indicated subtads are generated nestly
 #' @param nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
-#' @param mu0 The mean parameter, default 20
+#' @param mu0 The mean parameter, default 200
 #' @param resl Resolution, default set to 1
 #' @return A list includes following elements:
 #' \item{hic_mat}{n by n contact matrix}
@@ -945,7 +945,7 @@ rGMAP = cmpfun(rGMAP)
 #' \item{tads_true}{True TADs}
 #' @rdname data_simu
 #' @export
-data_simu <- function(stype = 'poisson-dist', nratio = 2.5, mu0 = 20, resl = 1){
+data_simu <- function(stype = 'poisson-dist', nratio = 2.5, mu0 = 200, resl = 1){
 
   if(stype == 'poisson-dist'){
     ## TADs with gap and Hier

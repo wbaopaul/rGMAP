@@ -4,7 +4,7 @@
 \alias{data_simu}
 \title{generate simulated hic_mat and true tads}
 \usage{
-data_simu(stype = "poisson-dist", nratio = 2.5, mu0 = 20, resl = 1)
+data_simu(stype = "poisson-dist", nratio = 2.5, mu0 = 200, resl = 1)
 }
 \arguments{
 \item{stype}{One of four types of simulated data in the manuscript:
@@ -14,7 +14,7 @@ poission- or nb- indicates poission distribution or negative bionomial distribut
 
 \item{nratio}{The effect size between intra- and inter domain, larger means higher intra-tad contacts}
 
-\item{mu0}{The mean parameter, default 20}
+\item{mu0}{The mean parameter, default 200}
 
 \item{resl}{Resolution, default set to 1}
 }
