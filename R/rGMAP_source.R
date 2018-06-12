@@ -86,21 +86,12 @@ cal_stat <- function(pp, d = 50){
   stat_wb[serror == 0] = 0L
 
 
-  ## proportion fold change between intra and inter domains
-  fc1 = prop_up/prop_btw
-  fc2 = prop_down/prop_btw
-  fc1[is.infinite(fc1)] = 1000
-  fc2[is.infinite(fc2)] = 1000
 
-  fc1[is.na(fc1)] = 1
-  fc2[is.na(fc2)] = 1
 
-  pr_fc_wb = pmax(fc1, fc2)
 
 
   return(list('up' = round(stat_up, 2), 'down' = round(stat_down,2),
-              'wb' = round(stat_wb, 2),
-              'pr_fc_wb' = round(pr_fc_wb, 2)))
+              'wb' = round(stat_wb, 2)))
 
 }
 cal_stat = cmpfun(cal_stat)
@@ -266,7 +257,7 @@ cal_insul = function(x, pp, wd = 50){
   return(insul.score)
 }
 
-## not used
+## not used version
 cal_insul_org = function(x, pp, wd = 50){
   nn = nrow(pp)
   start_bin = max(1, (x - wd))
@@ -447,7 +438,7 @@ rm_fpdomain <- function(subTads, pp){
 rm_fpdomain = cmpfun(rm_fpdomain)
 
 
-## remove redundant domains
+## remove redundant domains locally
 ## dw represents dw up- and down- range of the current domain
 rm_fpdomain_local <- function(subTads, pp, dw = 10){
 
@@ -743,13 +734,13 @@ call_domain = cmpfun(call_domain)
 #' @param  resl The resolution (bin size), default 10kb
 #' @param logt Do log-transformation or not, default TRUE
 #' @param dom_order Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
+#' @param maxDistInBin Only consider contact whose distance is not greater than maxDistInBIn bins,
+#' default 200 bins (or 2Mb)
 #' @param  min_d The minimum d (d: window size), default 25
 #' @param  max_d The maximum d (d: window size), default 100
 #' @param min_dp The minmum dp (dp: lower bound of tad size), defalt 5
 #' @param max_dp The maximum dp (dp: lower bound of tad size), defalt 10.
 #'   min_d, max_d, min_dp and max_dp should be specified in number of bins
-#' @param maxDistInBin Only consider contact whose distance is not greater than maxDistInBIn bins,
-#' default 200 bins
 #' @param hthr The lower bound cutoff for posterior probability, default 0.95
 #' @param t1thr Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
 #'        of TADs, 0.9 of subTADs
@@ -759,9 +750,26 @@ call_domain = cmpfun(call_domain)
 #' \item{params}{A data frame gives the final parameters for calling TADs}
 #' @rdname rGMAP
 #' @export
+#' @examples
+#' ## On simulated data:
+#' library(rGMAP)
+#' simu_res = data_simu('poisson-dist-hier')
+#' true_domains = simu_res$hierTads
+#' simu_mat = simu_res$hic_mat
+#' predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
+#' true_domains
+#' predicted_domains
+#'
+#' ## On an real data example
+#'hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
+#'res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+#'names(res)
+#' #quickly visualize some hierarchical domains
+#' pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 7000, 30, 10)
+#' pp$p2
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
-                  min_d = 25, max_d = 100, min_dp = 5, max_dp = 10,
-                  maxDistInBin = min(200, 2*10^6/resl), hthr = 0.95, t1thr = 0.5){
+                  maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
+                  min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
@@ -1381,12 +1389,12 @@ transf_tad_horz <- function(triangle_tad){
 
 
 #' visualize hierarchical domains
-#' @param  hic_mat hic_mat with 3 columns
-#' matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
-#' @param  hiertads_gmap the hierarchical domains called by gmap
+#' @param  hic_dat hic contact matrix for a given chromosome with 3 columns
+#' matrix or data.frame with columns: bin1, bin2, counts
+#' @param  hiertads_gmap the hierarchical domains called by GMAP
 #' @param start_bin the start bin of the genome
 #' @param end_bin the end bin of the genome
-#' @param cthr the count threshold for color, default 20
+#' @param cthr the upper bound count threshold for color, default 20
 #' @param kb_resl reslution of Hi-C data in kb
 #' @rdname plotdom
 #' @export

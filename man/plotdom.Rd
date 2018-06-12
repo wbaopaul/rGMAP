@@ -7,18 +7,18 @@
 plotdom(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_resl = 10)
 }
 \arguments{
-\item{hiertads_gmap}{the hierarchical domains called by gmap}
+\item{hic_dat}{hic contact matrix for a given chromosome with 3 columns
+matrix or data.frame with columns: bin1, bin2, counts}
+
+\item{hiertads_gmap}{the hierarchical domains called by GMAP}
 
 \item{start_bin}{the start bin of the genome}
 
 \item{end_bin}{the end bin of the genome}
 
-\item{cthr}{the count threshold for color, default 20}
+\item{cthr}{the upper bound count threshold for color, default 20}
 
 \item{kb_resl}{reslution of Hi-C data in kb}
-
-\item{hic_mat}{hic_mat with 3 columns
-matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin}
 }
 \description{
 visualize hierarchical domains

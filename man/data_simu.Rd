@@ -14,7 +14,9 @@ poission- or nb- indicates poission distribution or negative bionomial distribut
 
 \item{nratio}{The effect size between intra- and inter domain, larger means higher intra-tad contacts}
 
-\item{mu0}{The mean parameter for each contact domain}
+\item{mu0}{The mean parameter, default 20}
+
+\item{resl}{Resolution, default set to 1}
 }
 \value{
 A list includes following elements:

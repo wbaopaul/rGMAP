@@ -4,14 +4,13 @@
 \alias{rGMAP}
 \title{Detect hierarchical choromotin domains by GMAP}
 \usage{
-rGMAP(hic_mat, resl = 10 * 10^3, logt = T, dom_order = 2, min_d = 20,
-  max_d = 100, min_dp = 5, max_dp = 10, maxDistInBin = min(200, 2 *
-  10^6/resl), hthr = 0.95, t1thr = 0.5)
+rGMAP(hic_mat, resl = 10 * 10^3, logt = T, dom_order = 2,
+  maxDistInBin = min(200, 2 * 10^6/resl), min_d = 25, max_d = 100,
+  min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5)
 }
 \arguments{
-\item{hic_mat}{n by n matrix, n is the number of bins. Or hic_mat could by 3 columns
-matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
-index of a hic contact}
+\item{hic_mat}{Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
+end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom}
 
 \item{resl}{The resolution (bin size), default 10kb}
 
@@ -19,17 +18,17 @@ index of a hic contact}
 
 \item{dom_order}{Maximum level of hierarchical structures, default 2 (call TADs and subTADs)}
 
+\item{maxDistInBin}{Only consider contact whose distance is not greater than maxDistInBIn bins,
+default 200 bins (or 2Mb)}
+
 \item{min_d}{The minimum d (d: window size), default 25}
 
 \item{max_d}{The maximum d (d: window size), default 100}
 
 \item{min_dp}{The minmum dp (dp: lower bound of tad size), defalt 5}
 
-\item{max_dp}{The maximum dp (dp: lower bound of tad size), defalt 10
+\item{max_dp}{The maximum dp (dp: lower bound of tad size), defalt 10.
 min_d, max_d, min_dp and max_dp should be specified in number of bins}
-
-\item{maxDistInBin}{Threshold, default 200 bins, means
-only consider contacts whose distance is not greater than 200 bins}
 
 \item{hthr}{The lower bound cutoff for posterior probability, default 0.95}
 
@@ -44,4 +43,22 @@ A list includes following elements:
 }
 \description{
 Detect hierarchical choromotin domains by GMAP
+}
+\examples{
+## On simulated data:
+library(rGMAP)
+simu_res = data_simu('poisson-dist-hier')
+true_domains = simu_res$hierTads
+simu_mat = simu_res$hic_mat
+predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
+true_domains
+predicted_domains
+
+## On an real data example
+hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+names(res)
+#quickly visualize some hierarchical domains
+pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 7000, 30, 10)
+pp$p2
 }
