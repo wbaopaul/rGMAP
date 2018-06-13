@@ -18,6 +18,10 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+* rGMAP is an R package for implementing GMAP algorithm for detecting topologically associating domains (TADs) and sub-domains (sub-TADs)
+* The detailed of the algorithm can be found in *Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535*
+
 # Installation
 ## Install from Github
 ```{r}
@@ -33,7 +37,7 @@ install.packages('path to rGMAP_1.3.tar.gz', repos = NULL, type = 'source')
 
 ```
 
-# Run an example data
+# Work on an published Hi-C data
 > Data from *Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping*
 
 > KR normalized Hi-C data for IMR90 cell line, on chr15 with resolution 10kb
@@ -54,7 +58,7 @@ pp$p2
 
 
 
-# Run an simulated example
+# Work on an simulated example
 ```{r}
 set.seed(1)
 simu_res = data_simu('poisson-dist-hier')
@@ -64,4 +68,10 @@ predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
 true_domains
 predicted_domains
 
+```
+
+
+# Session Information
+```{r}
+session_info()
 ```

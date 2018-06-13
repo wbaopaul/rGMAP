@@ -4,13 +4,13 @@ GMAP is an algorithm to call topologically associating domains (TAD) and subdoma
 It's implemented through a R package rGMAP.
 
 
-## Installation from Github 
+## Install from Github 
 ```
 library(devtools)
 install_github("wbaopaul/rGMAP")
 ```
 
-## Installation from source
+## Install from source codes
 
 Download source codes in [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0) (previous versions are also included)
 ```
@@ -33,12 +33,12 @@ help(rGAMP)
 
 ## use an example data from Rao et al. (2014 Cell)
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
-res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2, bthr = 400)
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000)
 names(res)
 
 
 ## quickly visualize some hierarchical domains
-pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 5950, 6950, 30, 10)
+pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 5950, 6950, 30, 10000)
 pp$p2
 
 
