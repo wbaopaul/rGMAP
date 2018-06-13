@@ -1385,22 +1385,36 @@ transf_tad_horz <- function(triangle_tad){
   return(t(xy_new))
 }
 
-
+## reformat n by n hic_mat into (x, y, count) format
+refm_hic <- function(hic_mat){
+  n = nrow(hic_mat)
+  dat = NULL
+  tfun <- function(x, mat){
+    lx = n - x + 1
+    xx = rep(x, lx)
+    tt = cbind(xx, x:n, mat[x, x:n])
+  }
+  temp = lapply(1:n, tfun, hic_mat)
+  refm_mat = do.call('rbind', temp)
+  colnames(refm_mat) = c('x', 'y', 'count')
+  return(refm_mat)
+}
+refm_hic = cmpfun(refm_hic)
 
 
 #' visualize hierarchical domains
-#' @param  hic_dat hic contact matrix for a given chromosome with 3 columns
-#' matrix or data.frame with columns: bin1, bin2, counts
+#' @param  hic_dat hic contact matrix for a given chromosome, either a n by n matrix, or a 3 columns data.frame
+#' <bin1> <bin2> <counts>
 #' @param  hiertads_gmap the hierarchical domains called by GMAP
 #' @param start_bin the start bin of the genome
 #' @param end_bin the end bin of the genome
 #' @param cthr the upper bound count threshold for color, default 20
-#' @param kb_resl reslution of Hi-C data in kb
+#' @param resl reslution of Hi-C data, default 10000
 #' @rdname plotdom
 #' @export
-plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_resl = 10){
+plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl = 10000){
 
-  resl = kb_resl * 1000
+  if(dim(hic_dat)[1] == dim(hic_dat)[2]) hic_dat = data.table(refm_hic(hic_dat))
 
   names(hiertads_gmap) = c('start', 'end', 'dom_order')
   names(hic_dat) = c('n1', 'n2', 'count')
@@ -1444,20 +1458,19 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_re
 
   cols = colorRampPalette(c("white", "red"))(2)
 
-  #library(RColorBrewer)
-  #cols <- brewer.pal(10, 'Reds')
-  ss = 10^6/resl       ## plot in scale of mb
+
+  ss = ifelse(resl == 1, 1, 10^6/resl)  ## plot in scale of mb
+  xlab0 = ifelse(resl == 1, 'bin', 'Mb')
   hdat$n1 = hdat$n1/ss
-  #dd = sample(1:nrow(hdat), 20000)
-  #hdat = hdat[dd, ]
+
   orgPlot <- ggplot(data = hdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
     scale_colour_gradient(high = 'red', low = 'white') + xlim(min(hdat$n1), max(hdat$n1)) +
-    xlab('Mb') + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
-                                  legend.position = 'none') + theme(
-                                    plot.background = element_blank()
-                                    ,panel.grid.major = element_blank()
-                                    ,panel.grid.minor = element_blank()
-                                    ,panel.border = element_blank())
+    xlab(xlab0) + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+                                   legend.position = 'none') + theme(
+                                     plot.background = element_blank()
+                                     ,panel.grid.major = element_blank()
+                                     ,panel.grid.minor = element_blank()
+                                     ,panel.border = element_blank())
 
   #orgPlot
 
@@ -1505,4 +1518,5 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_re
   return(list('p1' = p1, 'p2' = p2, 'p3' = p3))
 }
 plotdom = cmpfun(plotdom)
+
 
