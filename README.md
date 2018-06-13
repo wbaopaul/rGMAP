@@ -12,7 +12,7 @@ install_github("wbaopaul/rGMAP")
 
 ## Install from source codes
 
-Download source codes in [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0) (previous versions are also included)
+Download source codes [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0) (previous versions are also included)
 ```
 install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
 ```
@@ -25,7 +25,11 @@ install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
   - data frames providing the coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
-* Detailed instruction and an example can be found by:
+## Vignette
+* Detailed [vignette](https://www.dropbox.com/s/n0bsr80fvmi1tp4/rGMAP-vignette.html?dl=0)
+
+## A quick example
+* A quick instruction and example:
 
 ```
 library(rGAMP)
