@@ -26,7 +26,7 @@ install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
   - the final parameters for calling TADs
 
 ## Vignette
-* Detailed [vignette](https://www.dropbox.com/s/n0bsr80fvmi1tp4/rGMAP-vignette.html?dl=0)
+* Detailed [vignette](https://www.dropbox.com/s/n0bsr80fvmi1tp4/rGMAP-vignette.html?dl=0) for the latest version 1.3.
 
 ## A quick example
 * A quick instruction and example:
