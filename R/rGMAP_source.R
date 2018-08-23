@@ -1,6 +1,8 @@
 ##---------------------------------------------------------------------##
 ## --This program is written by Wenbao Yu for implementing GMAP -------##
 ## --This file contains all the source codes
+## -- filter peak if it's not a local peak of insulation in orignal; update tune_score
+## -- function without using prefixed domain as background
 ##---------------------------------------------------------------------##
 
 # call upstream window counts of class1
@@ -84,29 +86,12 @@ cal_stat <- function(pp, d = 50){
   stat_wb[serror == 0] = 0L
 
 
-  ## proportion fold change between intra and inter domains
-  fc1 = prop_up/prop_btw
-  fc2 = prop_down/prop_btw
-  fc1[is.infinite(fc1)] = 1000
-  fc2[is.infinite(fc2)] = 1000
 
-  fc1[is.na(fc1)] = 1
-  fc2[is.na(fc2)] = 1
-
-  pr_fc_wb = pmax(fc1, fc2)
-
-
-  ## proportion fold change between up and down domains
-  pr_fc_ud = pmax(prop_up/prop_down, prop_down/prop_up)
-
-  pr_fc_ud[is.infinite(pr_fc_ud)] = 1000
-  pr_fc_ud[is.na(pr_fc_ud)] = 1
 
 
 
   return(list('up' = round(stat_up, 2), 'down' = round(stat_down,2),
-              'wb' = round(stat_wb, 2),
-              'pr_fc_wb' = round(pr_fc_wb, 2), 'pr_fc_ud' = round(pr_fc_ud,2)))
+              'wb' = round(stat_wb, 2)))
 
 }
 cal_stat = cmpfun(cal_stat)
@@ -114,27 +99,45 @@ cal_stat = cmpfun(cal_stat)
 
 
 ## find local peaks for a given vector
-## better version
-localMaxima <- function(x, pr_fc_wb, thr = 2, fcthr = 0.9, dp = 10) {
-  #y = which(diff(sign(diff(x))) == -2) + 1
+localMaxima <- function(x,  stats1, thr = 0.75,  dp = 10) {
+  # smmothing using sliding window before search local peaks
+  # filter by fc
+  x = round(runmean(x, 5), 2)
 
-  # smmothing using sliding window before search local peaks -- not used
-  x = runmean(x, 5)
+  stats1 = round(runmean(stats1, 5), 2)
 
-  x = round(x, 1)
   y = extrema(x)$maxindex[, 1]
+
+  y_fc = extrema(stats1)$maxindex[, 1]
+
+  if(length(y_fc) > 0){
+    y_mdist_fc = sapply(y, function(t) min(abs(t - y_fc)))
+    y_stat1 = stats1[y]
+    y = y[y_mdist_fc <= 3 & y_stat1 > 0]
+
+  }else{
+    return(NULL)
+  }
   xy = x[y]
-  y = y[xy >= thr]  ## screening by t1
 
-  pr_fc_wb = round(runmean(pr_fc_wb, 5), 2)
+  # filter by t1
+  local_t1_quantile <- function(ly){
+    ll = max(ly - 250, 1)
+    rr = min(ly + 250, length(x))
+    return(quantile(x[ll : rr], thr))
+  }
+
+  local_t1thr = quantile(x, thr)
+
+  if(length(x) >= 500) local_t1thr = sapply(y, local_t1_quantile)
 
 
-  xy = pr_fc_wb[y]  ## further screening some peaks with small wb-proportion fold change
-  y = y[xy >= quantile(pr_fc_wb, fcthr)]
+  y = y[xy >= local_t1thr]  ## screening by t1
+
 
   if(length(y) == 0) return(NULL)
 
-  # remove peaks that are close
+  # remove peaks that are very close
   if(!is.null(y)) y = combPeaks(y, x, dp)
 
 
@@ -146,68 +149,18 @@ localMaxima <- function(x, pr_fc_wb, thr = 2, fcthr = 0.9, dp = 10) {
 localMaxima = cmpfun(localMaxima)
 
 
-# define fcthr,thr locally
-localMaxima1 <- function(x,  pr_fc_wb, thr = 0.75, fcthr = 0.9, dp = 10) {
-  # smmothing using sliding window before search local peaks
-  x = runmean(x, 5)
-  x = round(x, 1)
-
-  local_t1_quantile <- function(ly){
-    ll = max(ly - 500, 1)
-    rr = min(ly + 500, length(x))
-    return(quantile(x[ll : rr], thr))
-  }
-
-  local_t1thr = quantile(x, thr)
-
-  y = extrema(x)$maxindex[, 1]
-  xy = x[y]
-
-  if(length(x) >= 1000) local_t1thr = sapply(y, local_t1_quantile)
-
-
-  y = y[xy >= local_t1thr]  ## screening by t1
-
-  pr_fc_wb = round(runmean(pr_fc_wb, 5), 2)
-
-  ## locally screening further, using fold change
-  xy_fc = pr_fc_wb[y]
-  local_fcthr = quantile(pr_fc_wb, fcthr)
-
-  local_fc_quantile <- function(ly){
-    ll = max(ly - 500, 1)
-    rr = min(ly + 500, length(x))
-    return(quantile(pr_fc_wb[ll : rr], fcthr))
-  }
-
-  if(length(x) >= 1000) local_fcthr = sapply(y, local_fc_quantile)
-  y = y[xy_fc >= local_fcthr]
-
-  if(length(y) == 0) return(NULL)
-
-  # remove peaks that are close
-  if(!is.null(y)) y = combPeaks(y, x, dp)
-
-
-  y = y[y >= 6]
-  y = y[y <= (length(x) - 6)]
-
-  return(y)
-}
-localMaxima1 = cmpfun(localMaxima1)
-
 
 ## define tad by gmap given peaks and statistics
-def_tad_gmap <- function(wb_peaks, stat_up, stat_down, nn, thr = 2, pr_fc_ud){
+def_tad_gmap <- function(wb_peaks, stat_up, stat_down, nn, thr = 2){
   s1 = stat_up[wb_peaks]
   s2 = stat_down[wb_peaks]
-  fc = pr_fc_ud[wb_peaks]
+
 
   len = length(wb_peaks)
   signs = rep(0, len)
-  pr_fc_ud = pr_fc_ud[wb_peaks]
-  ind1 = which(s1 > thr & fc > quantile(pr_fc_ud, 0.95))
-  ind2 = which(s2 > thr & fc > quantile(pr_fc_ud, 0.95))
+
+  ind1 = which(s1 > thr)
+  ind2 = which(s2 > thr)
   if(length(ind1) > 0) signs[ind1] = 1
   if(length(ind2) > 0) signs[ind2] = -1
 
@@ -287,75 +240,79 @@ def_tad_gmap = cmpfun(def_tad_gmap)
 
 ## using boundary to define segmatation
 full_seg <- function(bounds){
+  bounds = sort(bounds)
   len = length(bounds)
   return(data.frame('start' = bounds[-len], 'end' = bounds[-1]))
 }
 full_seg = cmpfun(full_seg)
 
-
-## score function
-## score = difference between TAD area and a predefined area (not whole background)
-## the predifined area: wd bins from diagonal of hic_mat
-tune_score <- function(pp, tads, rnum_bk, tnum_bk){
-
-  # calculate real contact number and total number for within TADs
-  rnum_tad = apply(as.matrix(tads), 1, function(x) sum(pp[x[1]:x[2], x[1]:x[2]]))
-  tnum_tad = apply(as.matrix(tads), 1, function(x) (x[2]-x[1]+1)^2)
-
-  # define the score
-  rnum_tad = sum(rnum_tad)
-  tnum_tad = sum(tnum_tad)
-
-  p1 = rnum_tad/tnum_tad
-  p2 = rnum_bk/tnum_bk
-
-  p0 = (rnum_tad + rnum_bk)/(tnum_tad + tnum_bk)
-  dpScore = (p1 - p2)/sqrt(p0*(1-p0)*(1/tnum_tad + 1/tnum_bk))
-
-  if(p1 == p2) dpScore = 0
-
-
-
-  return(dpScore)
+## calculate insulation score
+cal_insul = function(x, pp, wd = 50){
+  nn = nrow(pp)
+  start_bin = max(1, (x - wd))
+  end_bin = min(nn, (x + wd))
+  intra.score = sum(c(pp[start_bin:x, start_bin:x], pp[x:end_bin, x:end_bin]))
+  inter.score = 2*sum(pp[start_bin:x, x:end_bin])
+  insul.score = log2(intra.score + 1) - log2(inter.score + 1)
+  return(insul.score)
 }
-tune_score = cmpfun(tune_score)
+
+## not used version
+cal_insul_org = function(x, pp, wd = 50){
+  nn = nrow(pp)
+  start_bin = max(1, (x - wd))
+  end_bin = min(nn, (x + wd))
+  intra.score = sum(c(pp[start_bin:x, start_bin:x], pp[x:end_bin, x:end_bin]))
+  inter.score = 2*sum(pp[start_bin:x, x:end_bin])
+  insul.score = intra.score  - inter.score
+  return(insul.score)
+}
 
 
+## without using predifined area: using intra-tad over inter-tad instead
+tune_insulScore <- function(pp, tads, wd = 50){
+  nn = nrow(pp)
+
+  bds = sort(unique(unlist(tads)))
+  bds = setdiff(bds, c(1, nn))
+  insul.score = lapply(bds, cal_insul, pp, wd)
+  insul.score = do.call('c', insul.score)
+
+  if(all(is.na(insul.score))) return(0)
+
+  score.summ = mean(insul.score) * log(length(insul.score[insul.score > 0]) + 1)
+
+  return(score.summ)
+}
+tune_insulScore = cmpfun(tune_insulScore)
 
 ## including tune t1 and t2 -- given dp and d
-tune_T1T2 <- function(pp, stats, d, dp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5){
+tune_T1T2 <- function(pp, stats, stats1, d, dp, t1thr = 0.5){
 
   stat_up = stats$up
   stat_down = stats$down
   stat_wb = stats$wb
   pr_fc_wb = stats$pr_fc_wb
-  pr_fc_ud = stats$pr_fc_ud
   nn = nrow(pp)
 
   # no local peaks
   if(all(diff(stat_wb) <=0) || all(diff(stat_wb) >= 0)) return(list('score' = 0, 'tads' = NULL))
 
-  # 75% quantile is too close to 99% quantile
-  if(max(stat_wb)- quantile(stat_wb, 0.75) < 1) return(list('score' = 0, 'tads' = NULL))
-
   sthr = 0.05
   sthr0 = round(qnorm(sthr/nn, lower.tail = F), 1)
+
+  # 75% quantile is too close to 99% quantile
+  if(quantile(stat_wb, 0.9) - quantile(stat_wb, 0.75) < 1 ) return(list('score' = 0, 'tads' = NULL))
+
 
   # give candidates for t1
   stat_wb = runmean(stat_wb, 5)
 
-  if(F){
-    cand_t1 <- quantile(stat_wb, seq(t1thr, 1.0, length = 10))
-    if(all(cand_t1 < sthr0)) return(list('score' = 0, 'tads' = NULL))
-
-    cand_t1 = unique(pmax(sthr0, round(cand_t1, 1)))
-
-  }
-  cand_t1 = seq(t1thr, 1.0, length = 10)  # new way
+  cand_t1 = seq(0.99, t1thr, length = 50)  # use quantile
 
   # define t2 candidates globally
   tmp = c(stat_up, stat_down)
-  cand_t2 <- quantile(tmp[tmp != 0], seq(0.975, 1.0, length = 10))
+  cand_t2 <- quantile(tmp[tmp != 0], seq(0.975, 1.0, length = 2))
   tmp = qnorm(sthr, lower.tail = F)
   cand_t2 = unique(pmax(tmp, round(cand_t2, 2)))
 
@@ -364,12 +321,8 @@ tune_T1T2 <- function(pp, stats, d, dp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5){
   len2 = length(cand_t2)
   score = matrix(0, len1, len2)
 
-  ## define another stats for choosing between two close peaks
-  #stat_alt = cal_stat(pp, max(d-5, floor(d/2)))$wb
-  #stat_alt = cal_stat(pp, max(d-5, floor(d/2)))$pr_fc_wb
-
   for(i in 1:len1){
-    wb_peaks = localMaxima1(stat_wb, pr_fc_wb, thr = cand_t1[i], fcthr, dp = dp)
+    wb_peaks = localMaxima(stat_wb, stats1, thr = cand_t1[i], dp = dp)
 
     if(is.null(wb_peaks)) {
       score[i, ] = 0
@@ -383,12 +336,12 @@ tune_T1T2 <- function(pp, stats, d, dp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5){
 
     for(j in 1:len2){
 
-      tads <- def_tad_gmap(wb_peaks, stat_up, stat_down, nn, thr = cand_t2[j], pr_fc_ud)
+      tads <- def_tad_gmap(wb_peaks, stat_up, stat_down, nn, thr = cand_t2[j])
 
       if(nrow(tads) == 0) {
         score[i, j] = 0
       }else{
-        score[i, j] <- tune_score(pp, tads, rnum_bk, tnum_bk)
+        score[i, j] <- tune_insulScore(pp, tads)
       }
     }
   }
@@ -396,12 +349,12 @@ tune_T1T2 <- function(pp, stats, d, dp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5){
   if(max(score, na.rm = TRUE) <= 0) return(list('score' = 0, 'tads' = NULL))
 
   ind = which(score == max(score, na.rm = TRUE), arr.ind=TRUE)[1, ]
-  wb_peaks = localMaxima1(stat_wb, pr_fc_wb, thr = cand_t1[ind[1]], fcthr, dp = dp)
+  wb_peaks = localMaxima(stat_wb, stats1, thr = cand_t1[ind[1]],  dp = dp)
 
   if(is.null(wb_peaks)) return(list('score' = 0, 'tads' = NULL))
 
   tads <- def_tad_gmap(wb_peaks, stat_up, stat_down, nn,
-                       thr = cand_t2[ind[2]], pr_fc_ud)
+                       thr = cand_t2[ind[2]])
 
   return(list('tads' = tads, 'score' = max(score), 't1' = round(cand_t1[ind[1]], 3),
               't2' = round(cand_t2[ind[2]], 3) , 'stats' = stats,
@@ -413,7 +366,7 @@ tune_T1T2 = cmpfun(tune_T1T2)
 
 
 ## tune all parameters -- give candidates of d and dp
-tune_allPara <- function(pp, candD, candDp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5){
+tune_allPara <- function(pp, pp1, candD, candDp,  t1thr = 0.5){
   lend = length(candD)
   lendp = length(candDp)
   score = matrix(0, lend, lendp)
@@ -421,14 +374,20 @@ tune_allPara <- function(pp, candD, candDp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5
   sthr = 0.05
 
   for(i in 1:lend){
-    stats = cal_stat(pp, d = candD[i])
+    di = candD[i]
+    stats = cal_stat(pp, d = di)
+    insul_ws = 20
+
+    stats1 = lapply(1:nn, cal_insul, pp1, insul_ws)
+    stats1 = do.call('c', stats1)
+
     if(all(stats$wb <= qnorm(sthr/nn, lower.tail = F))) {
       score[i, ] = 0
       next
     }
     for(j in 1:lendp){
-      score[i, j] = tune_T1T2(pp, stats, d = candD[i], dp = candDp[j],
-                              rnum_bk, tnum_bk, fcthr, t1thr = t1thr)$score
+      score[i, j] = tune_T1T2(pp, stats, stats1, d = candD[i], dp = candDp[j],
+                               t1thr = t1thr)$score
     }
   }
 
@@ -439,7 +398,7 @@ tune_allPara <- function(pp, candD, candDp, rnum_bk, tnum_bk, fcthr, t1thr = 0.5
   dp = candDp[ind[2]]
 
   stats = cal_stat(pp, d = d)
-  res = tune_T1T2(pp, stats, d = d, dp = dp, rnum_bk, tnum_bk, fcthr, t1thr = t1thr)
+  res = tune_T1T2(pp, stats,  stats1, d = d, dp = dp, t1thr = t1thr)
   res$d = d
   res$dp = dp
   return(res)
@@ -449,8 +408,8 @@ tune_allPara = cmpfun(tune_allPara)
 
 
 
-## remove redundant domains and add false gaps
-domain_correction <- function(subTads, pp, rnum_bk, tnum_bk){
+## remove redundant domains
+rm_fpdomain <- function(subTads, pp){
 
   subTads = as.matrix(subTads)
   bds = sort(unique(as.vector(subTads)))
@@ -471,22 +430,17 @@ domain_correction <- function(subTads, pp, rnum_bk, tnum_bk){
 
   e_density = sapply(tsize, calDensity_expect)
 
-  #tmp = cbind(subTads, s_density, e_density, e_density*1.1)
-  #write.table(tmp, file = 'tmp.txt', row.names = F, col.names = F, quote = F, sep = '\t')
-  #message(round(rnum_bk/tnum_bk, 2))
-
-
-  ids = which(s_density <= pmax(e_density, rnum_bk/tnum_bk))
+  ids = which(s_density <= e_density)
   if(length(ids) > 0) subTads = subTads[-ids, ]
 
   return(subTads)
 }
-domain_correction = cmpfun(domain_correction)
+rm_fpdomain = cmpfun(rm_fpdomain)
 
 
-## remove redundant domains and add false gaps locally
+## remove redundant domains locally
 ## dw represents dw up- and down- range of the current domain
-domain_correction_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
+rm_fpdomain_local <- function(subTads, pp, dw = 10){
 
   subTads = as.matrix(subTads)
   bds = sort(unique(as.vector(subTads)))
@@ -496,155 +450,66 @@ domain_correction_local <- function(subTads, pp, rnum_bk, tnum_bk, dw = 5){
 
   s_density = round(apply(subTads, 1, function(x) mean(pp[x[1]:x[2], x[1]:x[2]])), 2)
   tsize = round(apply(subTads, 1, function(x) x[2] - x[1]))
+  midp = apply(subTads, 1, function(x) floor(x[2]/2 + x[1]/2))
   nn = nrow(pp)
 
-  calDensity_expect_local <- function(tsize0, dw0 = dw){
-    ids = lapply(1:nn, function(x) return(cbind(x, c(max(1, x - dw0 * tsize0):min(nn, x + dw0 * tsize0)))))
+  calDensity_expect_local <- function(j, dw0 = dw){
+    tsize0 = tsize[j]
+    midp0 = midp[j]
+    ids = lapply(max(1, midp0 - dw0 * tsize0) : min(nn, midp0 + dw0 * tsize0), function(x) return(cbind(x, c(max(1, x - tsize0):min(nn, x + tsize0)))))
     ids = do.call('rbind', ids)
     return(round(mean(pp[ids]), 2))
   }
 
 
-  e_density = sapply(tsize, calDensity_expect_local)
+  e_density = sapply(1:length(tsize), calDensity_expect_local)
 
-  #tmp = cbind(subTads, s_density, e_density, e_density*1.1)
-  #write.table(tmp, file = 'tmp.txt', row.names = F, col.names = F, quote = F, sep = '\t')
-  #message(round(rnum_bk/tnum_bk, 2))
-
-
-  ids = which(s_density <= pmax(e_density, rnum_bk/tnum_bk))
+  ids = which(s_density <= e_density)
   if(length(ids) > 0) subTads = subTads[-ids, ]
 
   return(subTads)
 }
-domain_correction_local = cmpfun(domain_correction_local)
+rm_fpdomain_local = cmpfun(rm_fpdomain_local)
 
 
-
-call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr = 0.5,
-                        bthr = 200, t1thr = 0.5){
-
+## transfrom hic normalized count to binary
+gmixmodel <- function(sub_mat, hthr = 0.9, maxDistInBin = 300){
   nn = nrow(sub_mat)
 
+  pp = matrix(0L, nn, nn)
 
   # if the tad is too small (less than 10 bins), do not call subtad
-  if(nn <= 10) return(list("tads" = NULL))
+  if(nn <= 10) return(pp)
 
-  # do clustering
-  if(nn <= bthr){
-    temp = as.vector(sub_mat[upper.tri(sub_mat, diag=T)])
-    if(length(unique(temp)) < 2) return(list("tads" = NULL))
-
-    class1 = rep(0, length(temp))
-
-    # deal with outliers
-    a3 = quantile(temp, 0.9)
-
-    if(a3 <= 0) return(list("tads" = NULL))
-
-    ids = which(temp >= a3)
-
-    if(length(ids) > 0){
-      class1[ids] = 1
-      temp = temp[-ids]
-      class0 = class1[-ids]
-    }else{
-      class0 = class1
-    }
-
-    if(quantile(temp, 0.9) <= 0) return(list("tads" = NULL))
-
-    if(length(unique(temp)) >= 2){
-      model2 <- Mclust(temp, G = 2, modelNames = 'E')
-
-      if(!is.null(model2)){
-        ind = which.max(model2$parameters$mean)
-        posterior = model2$z[, ind]
-        class0 = ifelse(posterior > hthr, 1, 0)
-        rm(posterior)
-      }
-
-      if(is.null(model2)){ ## not covergent
-        message('Trying using models with different variances')
-        model2 <- Mclust(temp, G = 2, modelNames = 'V')
-        if(!is.null(model2)) {
-          ind = which.max(model2$parameters$mean)
-          posterior = model2$z[, ind]
-          class0 = ifelse(posterior > hthr, 1, 0)
-          rm( posterior)
-        }else{
-          message('No models can be fitted, using 75% quantile as cutoff')
-          class0 = ifelse(temp > quantile(temp, 0.75), 1, 0)
-        }
-      }
-
-
-      # just in case:
-      if(length(unique(class0)) == 1 )  class0 = ifelse(temp > quantile(temp, 0.75), 1, 0)
-      rm(temp, model2)
-
-    }
-
-
-    pp = matrix(0L, nn, nn)
-
-    if(length(ids) > 0) {
-      class1[-ids] = class0
-      pp[upper.tri(pp, diag=T)] = class1
-    }else{
-      pp[upper.tri(pp, diag=T)] = class0
-    }
-
-    pp = pp + t(pp) - diag(diag(pp))
-    rm(class0, class1)
-  }
-
-  if(nn > bthr){
     ## if the hic-matrix is too large, we assume two loci with distance larger than
     ## say 1000 bins have no interactions. Data from this part will not be used for
     ## constructing the mixture models
-    if(all(class(sub_mat) != "data.frame")) {
-      mat = data.frame(sub_mat)
-    }
-    mat = as.list(mat)  ## for faster subsetting
-
-    colIDs =  sapply(1:nn, function(x) return(c(x : min(nn, x + bthr))))
-    len = sapply(colIDs, length)
-
-    getData <- function(x){
-      return(mat[[x]][colIDs[[x]]])
-    }
-    temp = unlist(sapply(1:nn, getData))
-    rm(mat)
-
-
-
-    rowIDs = rep(1:nn, len)
-    colIDs = unlist(colIDs)
-
-    partialIDs = cbind(rowIDs, colIDs)
-    rm(rowIDs, colIDs)
+  if(maxDistInBin > nn) maxDistInBin = nn
+  partialIDs = sapply(1:(nn-1), function(x) return(cbind(x, c((x + 1):min(nn, x + maxDistInBin)))))
+  partialIDs = do.call('rbind', partialIDs)
+  temp = sub_mat[partialIDs]
 
     # deal with outliers
     class1 = rep(0, length(temp))
 
     # deal with outliers
 
-    a3 = (quantile(temp, 0.975) )
-    a1 = max(quantile(temp, 0.025), 0)
+    out.thr.upper = quantile(temp, 0.95)
+    #out.thr.lower = max(quantile(temp, 0.025), 0)
+    out.thr.lower = quantile(temp, 0.05)
 
-    id1 = which(temp <= a1)
-    id3 = which(temp >= a3)
+    id.lower = which(temp <= out.thr.lower)
+    id.upper = which(temp >= out.thr.upper)
     ids = NULL
 
-    if(length(id3) > 0){
-      class1[id3] = 1
-      ids = c(id1, id3)
+    if(length(id.upper) > 0){
+      class1[id.upper] = 1
+      ids = c(id.lower, id.upper)
       temp = temp[-ids]
       class0 = class1[-ids]
     }else{
-      if(length(id1) > 0){
-        ids = id1
+      if(length(id.lower) > 0){
+        ids = id.lower
         temp = temp[-ids]
         class0 = class1[-ids]
       }else{
@@ -683,9 +548,6 @@ call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr
       rm(temp, model2)
     }
 
-
-    pp = matrix(0L, nn, nn)
-
     if(length(ids) > 0) {
       class1[-ids] = class0
       pp[partialIDs] = class1
@@ -693,21 +555,142 @@ call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr
       pp[partialIDs] = class0
     }
 
-    pp = pp + t(pp) - diag(diag(pp))
+    pp = pp + t(pp)
     rm(class0, partialIDs)
-  }
 
-  ##
+
+
   diag(pp) <- 0
 
-  # define candidates for d and dp
-  #candD = seq(min_d, Max_d, by = min_d)
-  candD = seq(min_d, Max_d, by = min_d)
+  return(list('binary_mat' = pp, 'mat_adjDist' = sub_mat))
+}
+gmixmodel = cmpfun(gmixmodel)
 
-  candDp = seq(min_dp, Max_dp, by = min_dp)
+
+
+## not used version
+gmixmodel0 <- function(sub_mat, hthr = 0.9, maxDistInBin = 300){
+  nn = nrow(sub_mat)
+
+  ## consider distance
+  if(F){
+    exp_mat = matrix(0, nn, nn)
+    for(dist.bin in 0:maxDistInBin){
+      row.ids = 1:(nn - dist.bin)
+      col.ids = row.ids + dist.bin
+      pids = cbind(row.ids, col.ids)
+      exp.n = mean(sub_mat[pids], trim = 0.25)
+      #exp.n = median(sub_mat[pids])
+      exp_mat[pids] = exp.n
+    }
+    exp_mat = exp_mat/2 + t(exp_mat)/2
+    sub_mat = sub_mat - exp_mat
+
+  }
+
+
+
+  pp = matrix(0L, nn, nn)
+
+  # if the tad is too small (less than 10 bins), do not call subtad
+  if(nn <= 10) return(pp)
+
+  ## if the hic-matrix is too large, we assume two loci with distance larger than
+  ## say 1000 bins have no interactions. Data from this part will not be used for
+  ## constructing the mixture models
+  if(maxDistInBin > nn) maxDistInBin = nn
+  partialIDs = sapply(1:(nn-1), function(x) return(cbind(x, c((x + 1):min(nn, x + maxDistInBin)))))
+  partialIDs = do.call('rbind', partialIDs)
+  temp = sub_mat[partialIDs]
+
+  # deal with outliers
+  class1 = rep(0, length(temp))
+
+  # deal with outliers
+
+  out.thr.upper = quantile(temp, 0.975)
+  #out.thr.lower = max(quantile(temp, 0.025), 0)
+  out.thr.lower = quantile(temp, 0.025)
+
+  id.lower = which(temp <= out.thr.lower)
+  id.upper = which(temp >= out.thr.upper)
+  ids = NULL
+
+  if(length(id.upper) > 0){
+    class1[id.upper] = 1
+    ids = c(id.lower, id.upper)
+    temp = temp[-ids]
+    class0 = class1[-ids]
+  }else{
+    if(length(id.lower) > 0){
+      ids = id.lower
+      temp = temp[-ids]
+      class0 = class1[-ids]
+    }else{
+      class0 = class1
+    }
+  }
+
+
+  if(length(unique(temp)) >= 2){
+    model2 <- Mclust(temp, G = 2, modelNames = 'E')
+
+    if(!is.null(model2)){
+      ind = which.max(model2$parameters$mean)
+      posterior = model2$z[, ind]
+      class0 = ifelse(posterior > hthr, 1, 0)
+      rm(posterior)
+    }
+
+    if(is.null(model2)){ ## not covergent
+      message('No models can be fitted, using 75% quantile as cutoff')
+      class0 = ifelse(temp > quantile(temp, 0.75), 1, 0)
+    }
+
+
+    # just in case:
+    if(length(unique(class0)) == 1 )  class0 = ifelse(temp > quantile(temp, 0.75), 1, 0)
+    #rm(temp, model2)
+  }
+
+  if(length(ids) > 0) {
+    class1[-ids] = class0
+    pp[partialIDs] = class1
+  }else{
+    pp[partialIDs] = class0
+  }
+
+  pp = pp + t(pp)
+  rm(class0, partialIDs)
+
+
+
+  diag(pp) <- 0
+
+  return(list('binary_mat' = pp, 'mat_adjDist' = sub_mat))
+}
+gmixmodel0 = cmpfun(gmixmodel0)
+
+
+call_domain <- function(sub_mat, max_d, min_d, max_dp, min_dp,  hthr = 0.5,
+                        maxDistInBin = 200, t1thr = 0.5){
+
+  nn = nrow(sub_mat)
+  ##
+  gres = gmixmodel(sub_mat, hthr, maxDistInBin)
+  pp = gres$binary_mat
+  sub_mat = gres$mat_adjDist
+  rm(gres)
+  if(sum(pp) == 0) return(list('tads' = NULL))
+
+  # define candidates for d and dp
+  #candD = seq(min_d, max_d, by = min_d)
+  candD = seq(min_d, max_d, by = min_d)
+
+  candDp = seq(min_dp, max_dp, by = min_dp)
 
   # define the background
-  if(Bg_d >= nn){
+  if(maxDistInBin > nn){
 
     rnum_bk <- sum(pp)
     tnum_bk <- length(pp)
@@ -715,25 +698,27 @@ call_domain <- function(sub_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr
     rnum_bk0 = sum(sub_mat)
 
   }else{
-    if(Bg_d > bthr) Bg_d = bthr
-    idBg = sapply(1:nn, function(x) return(cbind(x, c(max(1, x - Bg_d):min(nn, x + Bg_d)))))
+    idBg = lapply(1:nn, function(x) return(cbind(x, c(max(1, x - maxDistInBin):min(nn, x + maxDistInBin)))))
     idBg = do.call('rbind', idBg)
     temp = pp[idBg]
     rnum_bk <- sum(temp)
     tnum_bk <- length(temp)
-
-    temp0 = sub_mat[idBg]
-    rnum_bk0 = sum(temp0)
   }
 
   if(rnum_bk >= 0.95 * tnum_bk || rnum_bk < 1/sqrt(tnum_bk) * tnum_bk) return(list("tads" = NULL))
 
-  res = tune_allPara(pp, candD, candDp, rnum_bk, tnum_bk, fcthr, t1thr)
+  pp1 = pp
+  pp1[idBg] = sub_mat[idBg]
+  diag(pp1) = 0
+
+  #pp1 = gmixmodel(sub_mat, hthr, floor(maxDistInBin * 1.2))
+
+  res = tune_allPara(pp, pp1, candD, candDp, t1thr)
   subTads = res$tads
 
 
-  if(!is.null(subTads)) res$tads = domain_correction_local(subTads, pp, rnum_bk, tnum_bk)
-  #if(!is.null(subTads)) res$tads = domain_correction(subTads, sub_mat, rnum_bk0, tnum_bk)
+
+  if(!is.null(subTads)) res$tads = rm_fpdomain_local(subTads, pp)
 
   return(res)
 }
@@ -744,41 +729,52 @@ call_domain = cmpfun(call_domain)
 
 
 #' Detect hierarchical choromotin domains by GMAP
-#' @param  hic_mat n by n matrix, n is the number of bins. Or hic_mat could by 3 columns
-#' matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
-#' index of a hic contact
+#' @param  hic_mat Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
+#' end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom
 #' @param  resl The resolution (bin size), default 10kb
-#' @param  min_d The minimum d (d: window size), default 25
-#' @param  Max_d The maximum d (d: window size), default 2mb (or 200 bins)
-#' @param min_dp The minmum dp (dp: lower bound of tad size), defalt 5
-#' @param Max_dp The maximum dp (dp: lower bound of tad size), defalt 10
-#' @param Bg_d The size of the background domain, dalfault 2mb or 200bins
-#' @param hthr The lower bound cutoff for posterior probability, default 0.5 for TADs,
-#'        0.9 for subTADs
-#' @param bthr Threshold, above which a locus' contact is ignored , default 1000, means
-#'        for each locus, only consider contacts that within 1000 bins distance away of it
-#' @param t1thr Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
-#'        for TADs, 0.9 for subTADs
-#' @param fcthr Lower bound quantile for fold change of proportion of 1 between
-#'        intra and inter domains, default 0.9
 #' @param logt Do log-transformation or not, default TRUE
 #' @param dom_order Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
-#'         (if all between-within p-value < sthr (after bonferoni correction), stop call TAD or subTAD)
-#'   Max_d, Max_dp, Bg_d should be specified in number of bins and change with resloution
+#' @param maxDistInBin Only consider contact whose distance is not greater than maxDistInBIn bins,
+#' default 200 bins (or 2Mb)
+#' @param  min_d The minimum d (d: window size), default 25
+#' @param  max_d The maximum d (d: window size), default 100
+#' @param min_dp The minmum dp (dp: lower bound of tad size), defalt 5
+#' @param max_dp The maximum dp (dp: lower bound of tad size), defalt 10.
+#'   min_d, max_d, min_dp and max_dp should be specified in number of bins
+#' @param hthr The lower bound cutoff for posterior probability, default 0.95
+#' @param t1thr Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
+#'        of TADs, 0.9 of subTADs
 #' @return A list includes following elements:
 #' \item{tads}{A data frame with columns start, end indicates the start and end coordinates of each domain, respectively}
 #' \item{hierTads}{A data frame with columns start, end, dom_order, where dom_order indicates the hierarchical status of a domain, 1 indicates tads, 2 indicates subtads, and so on}
 #' \item{params}{A data frame gives the final parameters for calling TADs}
 #' @rdname rGMAP
 #' @export
+#' @examples
+#' ## On simulated data:
+#' library(rGMAP)
+#' simu_res = data_simu('poisson-dist-hier')
+#' true_domains = simu_res$hierTads
+#' simu_mat = simu_res$hic_mat
+#' predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
+#' true_domains
+#' predicted_domains
+#'
+#' ## On an real data example
+#'hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
+#'res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+#'names(res)
+#' #quickly visualize some hierarchical domains
+#' pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 7000, 30, 10)
+#' pp$p2
 rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
-                  min_d = 50, Max_d = 200, min_dp = 5, Max_dp = 10,
-                  Bg_d = 200, hthr = 0.9,
-                  bthr = 400, t1thr = 0.75, fcthr = 0.9){
+                  maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
+                  min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5){
 
   if(ncol(hic_mat) == 3){
     names(hic_mat) = c('n1', 'n2', 'counts')
-
+    hic_mat = data.table(hic_mat)
+    hic_mat = hic_mat[abs(n1 - n2) <= maxDistInBin]  ## keep contacts within maxDistInBin distance
 
     hic_mat = sparseMatrix(i = hic_mat$n1, j = hic_mat$n2, x=hic_mat$counts,
                            symmetric = T )
@@ -786,7 +782,7 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
 
   hic_mat = as.matrix(hic_mat)
   hic_mat[is.na(hic_mat)] = 0L
-  hic_mat = round(hic_mat)
+  hic_mat = round(hic_mat, 1)
   options(scipen = 10)
 
 
@@ -804,39 +800,36 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
   }
   nn = nrow(hic_mat)
 
-  ## adjust distance effect
-
-
-
   ## do logtransformation
   if(logt){
-    hic_mat[which(hic_mat < 0, arr.ind = T)] = 0
-    hic_mat = log(hic_mat + 1)
+    if(any(hic_mat < 0)) stop('Cannot do log-transformation on negative counts!')
+    hic_mat = log2(hic_mat + 1)
   }
 
 
+  if(max_d > maxDistInBin) max_d = maxDistInBin
   message(">>>> call TADs...")
-  res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr,
-                    bthr, t1thr)
+  res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr, maxDistInBin, t1thr)
   tads = res$tads
   if(is.null(tads)) {
-    message(">>> No tads: probably because Bg_d is specified too small or bthr too big!")
-    message(">>> first try: decrease bthr")
-    res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d, fcthr, hthr,
-                      floor(bthr*0.8), t1thr)
+    message(">>> No tads: probably because maxDistInBin, t1thr too big!")
+
+    message(">>> first try: decrease maxDistInBin")
+    res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
+                      floor(maxDistInBin*0.5), t1thr)
     tads = res$tads
+
     if(is.null(tads)){
-      message(">>> second try: incease Bg_d")
-      res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d * 2 ,
-                        fcthr, hthr,
-                        bthr, t1thr)
+      message(">>> second try: decrease t1thr")
+      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
+                        maxDistInBin, t1thr = t1thr/2)
       tads = res$tads
     }
+
     if(is.null(tads)){
-      message(">>> third try: decrease bthr and double Bg_d")
-      res = call_domain(hic_mat, Max_d, min_d, Max_dp, min_dp, Bg_d *2,
-                        fcthr, hthr,
-                        floor(bthr*0.8), t1thr)
+      message(">>> third try: decrease maxDistInBin and t1thr")
+      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp,  hthr,
+                        floor(maxDistInBin*0.5), t1thr = t1thr/2)
       tads = res$tads
     }
 
@@ -869,23 +862,22 @@ rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
         Sbin = parenTads[i, 1]
         Ebin = parenTads[i, 2]
         len = Ebin - Sbin + 1
-        if(len <= min(40, floor(500*1000/resl))) next
+        if(len <= min(50, floor(500*1000/resl))) next
 
         message(paste(">>>> call sub-domains for ", i, "th"," domain of order ", ll-1,
                       "...", sep = ""))
         message(paste("start from bin ", parenTads[i, 1], " to bin ", parenTads[i, 2], sep = ""))
 
 
-        md = min(200*1000/resl, 15)
-        Md = min(5 * md, floor(len/3))
+        md = min(200*1000/resl, 10)
+        Md = min(max_d, floor(len/3))
         Md = max(md, Md)
 
-        mdp = min_dp
-        Mdp = Max_dp
+        mdp = 5
+        Mdp = 10
 
         tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             Bg_d = len, fcthr = max(fcthr, 0.925), hthr = max(hthr, 0.99),  len,
-                             t1thr = max(0.925, t1thr))
+                             hthr = max(0.9, hthr), floor(2*len/3), t1thr = max(t1thr, 0.9))
 
         if(is.null(tmp0$tads)){
           message(paste('>>> no sub-TADs found!'))
@@ -939,9 +931,21 @@ rGMAP = cmpfun(rGMAP)
 
 
 
-## generate simulated hic_mat and true tads
+#' generate simulated hic_mat and true tads
+#' @param stype One of four types of simulated data in the manuscript:
+#' poission-dist, poission-dist-hier, nb-dist, nb-dist-hier;
+#' poission- or nb- indicates poission distribution or negative bionomial distribution
+#' -hier indicated subtads are generated nestly
+#' @param nratio The effect size between intra- and inter domain, larger means higher intra-tad contacts
+#' @param mu0 The mean parameter, default 200
+#' @param resl Resolution, default set to 1
+#' @return A list includes following elements:
+#' \item{hic_mat}{n by n contact matrix}
+#' \item{hierTads}{True heirarchical domains}
+#' \item{tads_true}{True TADs}
+#' @rdname data_simu
 #' @export
-data_simu <- function(stype = 'poisson', nratio = 2.5, mu0 = 20, resl = 1){
+data_simu <- function(stype = 'poisson-dist', nratio = 2.5, mu0 = 200, resl = 1){
 
   if(stype == 'poisson-dist'){
     ## TADs with gap and Hier
@@ -1381,22 +1385,36 @@ transf_tad_horz <- function(triangle_tad){
   return(t(xy_new))
 }
 
-
+## reformat n by n hic_mat into (x, y, count) format
+refm_hic <- function(hic_mat){
+  n = nrow(hic_mat)
+  dat = NULL
+  tfun <- function(x, mat){
+    lx = n - x + 1
+    xx = rep(x, lx)
+    tt = cbind(xx, x:n, mat[x, x:n])
+  }
+  temp = lapply(1:n, tfun, hic_mat)
+  refm_mat = do.call('rbind', temp)
+  colnames(refm_mat) = c('x', 'y', 'count')
+  return(refm_mat)
+}
+refm_hic = cmpfun(refm_hic)
 
 
 #' visualize hierarchical domains
-#' @param  hic_mat hic_mat with 3 columns
-#' matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
-#' @param  hiertads_gmap the hierarchical domains called by gmap
+#' @param  hic_dat hic contact matrix for a given chromosome, either a n by n matrix, or a 3 columns data.frame
+#' <bin1> <bin2> <counts>
+#' @param  hiertads_gmap the hierarchical domains called by GMAP
 #' @param start_bin the start bin of the genome
 #' @param end_bin the end bin of the genome
-#' @param cthr the count threshold for color, default 20
-#' @param kb_resl reslution of Hi-C data in kb
+#' @param cthr the upper bound count threshold for color, default 20
+#' @param resl reslution of Hi-C data, default 10000
 #' @rdname plotdom
 #' @export
-plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_resl = 10){
+plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl = 10000){
 
-  resl = kb_resl * 1000
+  if(dim(hic_dat)[1] == dim(hic_dat)[2]) hic_dat = data.table(refm_hic(hic_dat))
 
   names(hiertads_gmap) = c('start', 'end', 'dom_order')
   names(hic_dat) = c('n1', 'n2', 'count')
@@ -1440,20 +1458,19 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_re
 
   cols = colorRampPalette(c("white", "red"))(2)
 
-  #library(RColorBrewer)
-  #cols <- brewer.pal(10, 'Reds')
-  ss = 10^6/resl       ## plot in scale of mb
+
+  ss = ifelse(resl == 1, 1, 10^6/resl)  ## plot in scale of mb
+  xlab0 = ifelse(resl == 1, 'bin', 'Mb')
   hdat$n1 = hdat$n1/ss
-  #dd = sample(1:nrow(hdat), 20000)
-  #hdat = hdat[dd, ]
+
   orgPlot <- ggplot(data = hdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
     scale_colour_gradient(high = 'red', low = 'white') + xlim(min(hdat$n1), max(hdat$n1)) +
-    xlab('Mb') + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
-                                  legend.position = 'none') + theme(
-                                    plot.background = element_blank()
-                                    ,panel.grid.major = element_blank()
-                                    ,panel.grid.minor = element_blank()
-                                    ,panel.border = element_blank())
+    xlab(xlab0) + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+                                   legend.position = 'none') + theme(
+                                     plot.background = element_blank()
+                                     ,panel.grid.major = element_blank()
+                                     ,panel.grid.minor = element_blank()
+                                     ,panel.border = element_blank())
 
   #orgPlot
 
@@ -1501,4 +1518,5 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_re
   return(list('p1' = p1, 'p2' = p2, 'p3' = p3))
 }
 plotdom = cmpfun(plotdom)
+
 

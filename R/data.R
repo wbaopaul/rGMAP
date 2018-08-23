@@ -1,7 +1,5 @@
 #' Normalized Hi-C data for IMR90, chr15 with resolution 10kb.
 #'
-#' A dataset containing the prices and other attributes of almost 54,000
-#' diamonds.
 #'
 #' @format A data table with 3 variables:
 #' \describe{

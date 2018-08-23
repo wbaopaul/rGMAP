@@ -1,0 +1,204 @@
+\documentclass[a4paper]{book}
+\usepackage[times,hyper]{Rd}
+\usepackage{makeidx}
+\usepackage[utf8,latin1]{inputenc}
+% \usepackage{graphicx} % @USE GRAPHICX@
+\makeindex{}
+\begin{document}
+\chapter*{}
+\begin{center}
+{\textbf{\huge rGMAP}}
+\par\bigskip{\large \today}
+\end{center}
+\begin{description}
+\raggedright{}
+\item[Type]\AsIs{Package}
+\item[Title]\AsIs{Call hierarchical chromatin domains from HiC matrix by GMAP}
+\item[Version]\AsIs{1.3}
+\item[Date]\AsIs{06-12-2018}
+\item[Author]\AsIs{Wenbao Yu}
+\item[Maintainer]\AsIs{Wenbao Yu }\email{yuw1@email.chop.edu}\AsIs{}
+\item[Description]\AsIs{Call hierarchical chromatin domains from HiC contact matrix by Gaussian Mixture model And Proportion test}
+\item[Reference]\AsIs{Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535.}
+\item[License]\AsIs{GPL (>= 2)}
+\item[LazyData]\AsIs{TRUE}
+\item[Imports]\AsIs{data.table,
+ggplot2,
+mclust,
+EMD,
+caTools,
+Matrix,
+Rcpp (>= 0.12.5)}
+\item[LinkingTo]\AsIs{Rcpp}
+\item[RoxygenNote]\AsIs{6.0.1}
+\end{description}
+\Rdcontents{\R{} topics documented:}
+\inputencoding{utf8}
+\HeaderA{data\_simu}{generate simulated hic\_mat and true tads}{data.Rul.simu}
+%
+\begin{Description}\relax
+generate simulated hic\_mat and true tads
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+data_simu(stype = "poisson-dist", nratio = 2.5, mu0 = 20, resl = 1)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{stype}] One of four types of simulated data in the manuscript:
+poission-dist, poission-dist-hier, nb-dist, nb-dist-hier;
+poission- or nb- indicates poission distribution or negative bionomial distribution
+-hier indicated subtads are generated nestly
+
+\item[\code{nratio}] The effect size between intra- and inter domain, larger means higher intra-tad contacts
+
+\item[\code{mu0}] The mean parameter, default 20
+
+\item[\code{resl}] Resolution, default set to 1
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A list includes following elements:
+\begin{ldescription}
+\item[\code{hic\_mat}] n by n contact matrix
+\item[\code{hierTads}] True heirarchical domains
+\item[\code{tads\_true}] True TADs
+\end{ldescription}
+\end{Value}
+\inputencoding{utf8}
+\HeaderA{hic\_rao\_IMR90\_chr15}{Normalized Hi-C data for IMR90, chr15 with resolution 10kb.}{hic.Rul.rao.Rul.IMR90.Rul.chr15}
+\keyword{datasets}{hic\_rao\_IMR90\_chr15}
+%
+\begin{Description}\relax
+Normalized Hi-C data for IMR90, chr15 with resolution 10kb.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+hic_rao_IMR90_chr15
+\end{verbatim}
+\end{Usage}
+%
+\begin{Format}
+A data table with 3 variables:
+\begin{description}
+
+\item[n1] bin 1
+\item[n2] bin 2
+\item[count] normalized counts
+
+\end{description}
+\end{Format}
+%
+\begin{Source}\relax
+Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping
+\end{Source}
+\inputencoding{utf8}
+\HeaderA{plotdom}{visualize hierarchical domains}{plotdom}
+%
+\begin{Description}\relax
+visualize hierarchical domains
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+plotdom(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, kb_resl = 10)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{hiertads\_gmap}] the hierarchical domains called by gmap
+
+\item[\code{start\_bin}] the start bin of the genome
+
+\item[\code{end\_bin}] the end bin of the genome
+
+\item[\code{cthr}] the count threshold for color, default 20
+
+\item[\code{kb\_resl}] reslution of Hi-C data in kb
+
+\item[\code{hic\_mat}] hic\_mat with 3 columns
+matrix or data.frame with columns: bin1, bin2, counts, in which bin1 and bin2, from 1 to m, are the bin
+\end{ldescription}
+\end{Arguments}
+\inputencoding{utf8}
+\HeaderA{rGMAP}{Detect hierarchical choromotin domains by GMAP}{rGMAP}
+%
+\begin{Description}\relax
+Detect hierarchical choromotin domains by GMAP
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+rGMAP(hic_mat, resl = 10 * 10^3, logt = T, dom_order = 2,
+  maxDistInBin = min(200, 2 * 10^6/resl), min_d = 25, max_d = 100,
+  min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{hic\_mat}] Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
+end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom
+
+\item[\code{resl}] The resolution (bin size), default 10kb
+
+\item[\code{logt}] Do log-transformation or not, default TRUE
+
+\item[\code{dom\_order}] Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
+
+\item[\code{maxDistInBin}] Only consider contact whose distance is not greater than maxDistInBIn bins,
+default 200 bins (or 2Mb)
+
+\item[\code{min\_d}] The minimum d (d: window size), default 25
+
+\item[\code{max\_d}] The maximum d (d: window size), default 100
+
+\item[\code{min\_dp}] The minmum dp (dp: lower bound of tad size), defalt 5
+
+\item[\code{max\_dp}] The maximum dp (dp: lower bound of tad size), defalt 10.
+min\_d, max\_d, min\_dp and max\_dp should be specified in number of bins
+
+\item[\code{hthr}] The lower bound cutoff for posterior probability, default 0.95
+
+\item[\code{t1thr}] Lower bound for t1 for calling TAD, default 0.5 quantile of test statistics
+of TADs, 0.9 of subTADs
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A list includes following elements:
+\begin{ldescription}
+\item[\code{tads}] A data frame with columns start, end indicates the start and end coordinates of each domain, respectively
+\item[\code{hierTads}] A data frame with columns start, end, dom\_order, where dom\_order indicates the hierarchical status of a domain, 1 indicates tads, 2 indicates subtads, and so on
+\item[\code{params}] A data frame gives the final parameters for calling TADs
+\end{ldescription}
+\end{Value}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## On simulated data:
+library(rGMAP)
+simu_res = data_simu('poisson-dist-hier')
+true_domains = simu_res$hierTads
+simu_mat = simu_res$hic_mat
+predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
+true_domains
+predicted_domains
+
+## On an real data example
+hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+names(res)
+#quickly visualize some hierarchical domains
+pp = plotdom(hic_rao_IMR90, res$hierTads, 6000, 7000, 30, 10)
+pp$p2
+\end{ExampleCode}
+\end{Examples}
+\printindex{}
+\end{document}

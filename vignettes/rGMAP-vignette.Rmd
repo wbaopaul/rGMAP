@@ -1,0 +1,83 @@
+---
+title: "Vignette of rGMAP package"
+author: "Wenbao Yu"
+date: "rGMAP version 1.3 <br><br>Updated on `r Sys.Date()`"
+output: BiocStyle::html_document
+mainfont: Arial
+vignette: >
+ %\VignetteIndexEntry{rGMAP}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning = F, message = F,
+  comment = "#>"
+)
+```
+
+# Introduction
+* rGMAP is an R package for implementing GMAP algorithm for detecting topologically associating domains (TADs) and sub-domains (sub-TADs)
+* The detailed of the algorithm can be found in *Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535*
+
+# Installation
+## Install from Github
+```{r}
+library(devtools)
+install_github('wbaopaul/rGMAP')
+
+```
+
+## Install from source codes
+```{r, eval=F}
+
+install.packages('path to rGMAP_1.3.tar.gz', repos = NULL, type = 'source')
+
+```
+
+# Examples
+## Work on an published Hi-C data
+> Data from *Rao et al., Cell 2014, A 3D map of the human genome at kilobase resolution reveals principles of chromatin looping*
+
+> KR normalized Hi-C data for IMR90 cell line, on chr15 with resolution 10kb
+
+```{r, fig.height=3, fig.width=15, fig.align='center'}
+library(rGMAP)
+hic_rao_IMR90_chr15   
+res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+names(res)
+
+#quickly visualize some hierarchical domains
+pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 5950, 6900, 30, 10000)
+pp$p2
+
+```
+
+
+
+
+
+## Work on an simulated example
+```{r, fig.height=3, fig.width=15, fig.align='center'}
+set.seed(1)
+simu_res = data_simu('poisson-dist-hier')
+true_domains = simu_res$hierTads
+simu_mat = simu_res$hic_mat
+predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
+
+pp = plotdom(simu_mat, predicted_domains, 1, 1000, 20, 1)
+pp$p2
+
+#true_domains
+#predicted_domains
+
+
+```
+
+
+# Session Information
+```{r}
+session_info()
+```
