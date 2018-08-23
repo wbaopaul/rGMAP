@@ -18,8 +18,7 @@ install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
 ```
 ## Usage
 * Input:
-  - The Input is either a 3 columns (<i> <j> <count>) Hi-C map for a given chromosome, corrsponding to the i-th bin, j-th bin and the contact number for a contact; **note that the first two columns should be integer and in units of bin.**
-  
+  - The Input is either a 3 columns (<i> <j> <count>) Hi-C map for a given chromosome, corrsponding to the i_th bin, j_th bin for the chromosome and the contact number for a contact; **note that the first two columns should be integer and in units of bin.**
   - Or a n by n contact matrix, n is the total number of bins for a chromosome
 
 * Output:
