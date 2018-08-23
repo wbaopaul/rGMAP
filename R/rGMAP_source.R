@@ -725,12 +725,176 @@ call_domain <- function(sub_mat, max_d, min_d, max_dp, min_dp,  hthr = 0.5,
 call_domain = cmpfun(call_domain)
 
 
+# run rGMAP for a single chromosom
+rGMAP_singChr <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
+                          maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
+                          min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5){
+  if(ncol(hic_mat) == 3){
+    names(hic_mat) = c('n1', 'n2', 'counts')
+    hic_mat = data.table(hic_mat)
+    hic_mat = hic_mat[abs(n1 - n2) <= maxDistInBin]  ## keep contacts within maxDistInBin distance
+    
+    hic_mat = sparseMatrix(i = hic_mat$n1, j = hic_mat$n2, x=hic_mat$counts,
+                           symmetric = T )
+  }
+  
+  hic_mat = as.matrix(hic_mat)
+  hic_mat[is.na(hic_mat)] = 0L
+  hic_mat = round(hic_mat, 1)
+  options(scipen = 10)
+  
+  
+  # remove first k rows and columns if the first k by k submatrix is zero matrix
+  k = 0
+  for(i in 1:nrow(hic_mat)){
+    if(any(hic_mat[i, ] != 0)) {
+      k = i - 1
+      break
+    }
+  }
+  if(k > 0) {
+    hic_mat = hic_mat[-(1:k), -(1:k)]
+    #message(paste(">>>> remove first ", k, " bins whose counts are all zero"))
+  }
+  nn = nrow(hic_mat)
+  
+  ## do logtransformation
+  if(logt){
+    if(any(hic_mat < 0)) stop('Cannot do log-transformation on negative counts!')
+    hic_mat = log2(hic_mat + 1)
+  }
+  
+  
+  if(max_d > maxDistInBin) max_d = maxDistInBin
+  message(">>>> call TADs...")
+  res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr, maxDistInBin, t1thr)
+  tads = res$tads
+  if(is.null(tads)) {
+    message(">>> No tads: probably because maxDistInBin, t1thr too big!")
+    
+    message(">>> first try: decrease maxDistInBin")
+    res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
+                      floor(maxDistInBin*0.5), t1thr)
+    tads = res$tads
+    
+    if(is.null(tads)){
+      message(">>> second try: decrease t1thr")
+      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
+                        maxDistInBin, t1thr = t1thr/2)
+      tads = res$tads
+    }
+    
+    if(is.null(tads)){
+      message(">>> third try: decrease maxDistInBin and t1thr")
+      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp,  hthr,
+                        floor(maxDistInBin*0.5), t1thr = t1thr/2)
+      tads = res$tads
+    }
+    
+    if(is.null(tads)){
+      message(">>> Give up, No tads detected!")
+      return(list("tads" = NULL, 'hierTads' = NULL))
+    }
+    
+  }
+  params = data.frame('score' = round(res$score, 1), 'd' = res$d, 'dp' = res$dp, 't1' = res$t1, 't2' = res$t2)
+  
+  #message(paste(c('score', 'd =', 'dp =', 't1 =', 't2 ='), unlist(params),  collapse = ", "))
+  
+  ## call hierarchical structure
+  
+  hierTads = list()
+  if(dom_order > 1){
+    ll = 1
+    parenTads = tads
+    if(is.null(tads)) return(list("tads" = NULL, 'hierTads' = NULL))
+    
+    
+    hierTads[[ll]] = data.frame(tads)
+    
+    while(ll < dom_order){
+      tempTads = list()
+      ll = ll + 1
+      for(i in 1:nrow(parenTads)){
+        
+        Sbin = parenTads[i, 1]
+        Ebin = parenTads[i, 2]
+        len = Ebin - Sbin + 1
+        if(len <= min(50, floor(500*1000/resl))) next
+        
+        message(paste(">>>> call sub-domains for ", i, "th"," domain of order ", ll-1,
+                      "...", sep = ""))
+        message(paste("start from bin ", parenTads[i, 1], " to bin ", parenTads[i, 2], sep = ""))
+        
+        
+        md = min(200*1000/resl, 10)
+        Md = min(max_d, floor(len/3))
+        Md = max(md, Md)
+        
+        mdp = 5
+        Mdp = 10
+        
+        tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
+                             hthr = max(0.9, hthr), floor(2*len/3), t1thr = max(t1thr, 0.9))
+        
+        if(is.null(tmp0$tads)){
+          message(paste('>>> no sub-TADs found!'))
+          next
+        }
+        
+        tempTads[[i]] = tmp0$tads + Sbin - 1
+        params0 = c(tmp0$d, tmp0$dp, tmp0$t1, tmp0$t2)
+        
+        message(paste(c('d =', 'dp =', 't1 =', 't2 ='), params0,  collapse = ", "))
+        
+      }
+      
+      ## do not go to next step if no subTads are called from current level
+      if(length(tempTads) == 0) break
+      
+      parenTads = data.frame(do.call("rbind", tempTads), row.names = NULL)
+      
+      hierTads[[ll]] = parenTads
+      
+    }
+    rm(hic_mat)
+  }
+  
+  
+  
+  tads = data.frame((tads+k) * resl - floor(resl/2))
+  
+  if(length(hierTads) == 0) {
+    hierTads = tads
+    hierTads$dom_order = 1
+  }else{
+    hierTads = lapply(hierTads, function(x) (x + k) * resl - floor(resl/2))
+    
+    dlens = sapply(hierTads, nrow)
+    
+    hierTads = do.call('rbind', hierTads)
+    
+    hierTads$dom_order = rep(1:length(dlens), dlens)
+  }
+  
+  
+  row.names(hierTads) = NULL
+  return(list('tads' = data.table(tads), 'hierTads' = data.table(hierTads),
+              'params' = data.table(params)))
+  
+}
+rGMAP_singChr = cmpfun(rGMAP_singChr)
 
 
 
 #' Detect hierarchical choromotin domains by GMAP
-#' @param  hic_mat Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
-#' end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom
+#' @param  hic_mat supports three types of format: 
+#' 1). a 3-column Hi-C contact matrix, with  
+#' columns the i_th, j_th bin of a chromosom and the corresponding contact number; 
+#' 2). a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of a chromosome;
+#' 3). a text file name of the above two types of data
+#' @param  index_file index file indicates the genomic coordinates for each bin (compatible with HiC-Pro);
+#' default NULL; when index file was given, multiple chromosomes input was supported and the hic_mat should be consistent with index_file
 #' @param  resl The resolution (bin size), default 10kb
 #' @param logt Do log-transformation or not, default TRUE
 #' @param dom_order Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
@@ -767,162 +931,77 @@ call_domain = cmpfun(call_domain)
 #' #quickly visualize some hierarchical domains
 #' pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 7000, 30, 10)
 #' pp$p2
-rGMAP <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
+rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_order = 2,
                   maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
                   min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5){
 
-  if(ncol(hic_mat) == 3){
+  if(class(hic_mat) == 'character') {
+     message('Read hic_mat...')
+     hic_mat = fread(hic_mat, header = F)
+  }
+  if(is.null(index_file)){
+    message('Note that the input hic map should be just for a single chromosome, since no index_file was provided.')
+    output_list = rGMAP_singChr(hic_mat, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
+          min_dp, max_dp, hthr, t1thr)
+  }
+  
+  
+  if(!is.null(index_file)){
+    if(ncol(hic_mat) != 3) stop('The input hic_mat should be in 3-column data frame format!')
+    if(!any(class(hic_mat) == 'data.table')) hic_mat = data.table(hic_mat)
     names(hic_mat) = c('n1', 'n2', 'counts')
-    hic_mat = data.table(hic_mat)
-    hic_mat = hic_mat[abs(n1 - n2) <= maxDistInBin]  ## keep contacts within maxDistInBin distance
-
-    hic_mat = sparseMatrix(i = hic_mat$n1, j = hic_mat$n2, x=hic_mat$counts,
-                           symmetric = T )
-  }
-
-  hic_mat = as.matrix(hic_mat)
-  hic_mat[is.na(hic_mat)] = 0L
-  hic_mat = round(hic_mat, 1)
-  options(scipen = 10)
-
-
-  # remove first k rows and columns if the first k by k submatrix is zero matrix
-  k = 0
-  for(i in 1:nrow(hic_mat)){
-    if(any(hic_mat[i, ] != 0)) {
-      k = i - 1
-      break
+    
+    index = fread(index_file, select = 1:4, header = F)
+    names(index) = c('chr', 'start', 'end', 'id')
+    
+    
+    if(any(!hic_mat$n1 %in% index$id) || any(!hic_mat$n2 %in% index$id)){
+      stop('The hic_mat was not consistent with the index file: 
+           all bin ids in the hic_mat should be included in the index file!')
     }
-  }
-  if(k > 0) {
-    hic_mat = hic_mat[-(1:k), -(1:k)]
-    #message(paste(">>>> remove first ", k, " bins whose counts are all zero"))
-  }
-  nn = nrow(hic_mat)
-
-  ## do logtransformation
-  if(logt){
-    if(any(hic_mat < 0)) stop('Cannot do log-transformation on negative counts!')
-    hic_mat = log2(hic_mat + 1)
-  }
-
-
-  if(max_d > maxDistInBin) max_d = maxDistInBin
-  message(">>>> call TADs...")
-  res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr, maxDistInBin, t1thr)
-  tads = res$tads
-  if(is.null(tads)) {
-    message(">>> No tads: probably because maxDistInBin, t1thr too big!")
-
-    message(">>> first try: decrease maxDistInBin")
-    res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
-                      floor(maxDistInBin*0.5), t1thr)
-    tads = res$tads
-
-    if(is.null(tads)){
-      message(">>> second try: decrease t1thr")
-      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr,
-                        maxDistInBin, t1thr = t1thr/2)
-      tads = res$tads
+    index = index[chr != 'chrM']
+    chrs = unique(index$chr)
+    tads = list()
+    hierTads = list()
+    params = list()
+    
+    for(chr0 in chrs){
+      # extract hic_mat for chr0
+      message(paste('Working on chromosome', chr0, '...'))
+      index0 = index[chr == chr0]
+      hic_mat0 = hic_mat[n1 %in% index0$id & n2 %in% index0$id]
+      id0 = min(index0$id)
+      hic_mat0[, 'n1' := n1 - id0 + 1]
+      hic_mat0[, 'n2' := n2 - id0 + 1]
+      if(nrow(hic_mat0) <= 20) next
+      res = rGMAP_singChr(hic_mat0, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
+                  min_dp, max_dp, hthr, t1thr)
+      if(!is.null(res$tads)) res$tads$chr = chr0
+      if(!is.null(res$hierTads)) res$hierTads$chr = chr0
+      if(!is.null(res$params)) res$params$chr = chr0
+      
+      tads[[chr0]] = res$tads
+      hierTads[[chr0]] = res$hierTads
+      params[[chr0]] = res$params
+      
+      message(paste(chr0, 'done!'))
     }
-
-    if(is.null(tads)){
-      message(">>> third try: decrease maxDistInBin and t1thr")
-      res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp,  hthr,
-                        floor(maxDistInBin*0.5), t1thr = t1thr/2)
-      tads = res$tads
-    }
-
-    if(is.null(tads)){
-      message(">>> Give up, No tads detected!")
-      return(list("tads" = NULL, 'hierTads' = NULL))
-    }
-
-  }
-  params = data.frame('score' = round(res$score, 1), 'd' = res$d, 'dp' = res$dp, 't1' = res$t1, 't2' = res$t2)
-
-  message(paste(c('score', 'd =', 'dp =', 't1 =', 't2 ='), unlist(params),  collapse = ", "))
-
-  ## call hierarchical structure
-
-  hierTads = list()
-  if(dom_order > 1){
-    ll = 1
-    parenTads = tads
-    if(is.null(tads)) return(list("tads" = NULL, 'hierTads' = NULL))
-
-
-    hierTads[[ll]] = data.frame(tads)
-
-    while(ll < dom_order){
-      tempTads = list()
-      ll = ll + 1
-      for(i in 1:nrow(parenTads)){
-
-        Sbin = parenTads[i, 1]
-        Ebin = parenTads[i, 2]
-        len = Ebin - Sbin + 1
-        if(len <= min(50, floor(500*1000/resl))) next
-
-        message(paste(">>>> call sub-domains for ", i, "th"," domain of order ", ll-1,
-                      "...", sep = ""))
-        message(paste("start from bin ", parenTads[i, 1], " to bin ", parenTads[i, 2], sep = ""))
-
-
-        md = min(200*1000/resl, 10)
-        Md = min(max_d, floor(len/3))
-        Md = max(md, Md)
-
-        mdp = 5
-        Mdp = 10
-
-        tmp0 <-  call_domain(hic_mat[Sbin:Ebin, Sbin:Ebin], Md, md, Mdp, mdp,
-                             hthr = max(0.9, hthr), floor(2*len/3), t1thr = max(t1thr, 0.9))
-
-        if(is.null(tmp0$tads)){
-          message(paste('>>> no sub-TADs found!'))
-          next
-        }
-
-        tempTads[[i]] = tmp0$tads + Sbin - 1
-        params0 = c(tmp0$d, tmp0$dp, tmp0$t1, tmp0$t2)
-
-        message(paste(c('d =', 'dp =', 't1 =', 't2 ='), params0,  collapse = ", "))
-
-      }
-
-      ## do not go to next step if no subTads are called from current level
-      if(length(tempTads) == 0) break
-
-      parenTads = data.frame(do.call("rbind", tempTads), row.names = NULL)
-
-      hierTads[[ll]] = parenTads
-
-    }
-    rm(hic_mat)
-  }
-
-  message(">>>> Domain calling all done!")
-
-  tads = data.frame((tads+k) * resl - floor(resl/2))
-
-  if(length(hierTads) == 0) {
-    hierTads = tads
-    hierTads$dom_order = 1
-  }else{
-    hierTads = lapply(hierTads, function(x) (x + k) * resl - floor(resl/2))
-
-    dlens = sapply(hierTads, nrow)
-
+    
+    tads = do.call('rbind', tads)
     hierTads = do.call('rbind', hierTads)
-
-    hierTads$dom_order = rep(1:length(dlens), dlens)
+    params = do.call('rbind', params)
+    
+    if(!is.null(tads)) setcolorder(tads, c('chr', 'start', 'end'))
+    if(!is.null(hierTads)) setcolorder(hierTads, c('chr', 'start', 'end', 'dom_order'))
+    if(!is.null(params)) setcolorder(params, c('chr', 'score', 'd', 'dp', 't1', 't2'))
+    
+    output_lit = list('tads' = tads, 'hierTads' = hierTads, 'params' = params)
   }
-
-
-  row.names(hierTads) = NULL
-  return(list('tads' = tads, 'hierTads' = hierTads, 'params' = params))
-
+  
+  
+  
+  message('All done')
+  return(output_list)
 }
 
 rGMAP = cmpfun(rGMAP)

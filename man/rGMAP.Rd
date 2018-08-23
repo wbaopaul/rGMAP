@@ -4,13 +4,19 @@
 \alias{rGMAP}
 \title{Detect hierarchical choromotin domains by GMAP}
 \usage{
-rGMAP(hic_mat, resl = 10 * 10^3, logt = T, dom_order = 2,
-  maxDistInBin = min(200, 2 * 10^6/resl), min_d = 25, max_d = 100,
-  min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5)
+rGMAP(hic_mat, index_file = NULL, resl = 10 * 10^3, logt = T,
+  dom_order = 2, maxDistInBin = min(200, 2 * 10^6/resl), min_d = 25,
+  max_d = 100, min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5)
 }
 \arguments{
-\item{hic_mat}{Either a 3 columns Hi-C contact matrix for a given chromosome, with each row corrsponding to the start bin,
-end bin and the contact number; or a n by n matrix, n is the number of bins for a given chromosom}
+\item{hic_mat}{supports three types of format: 
+1). a 3-column Hi-C contact matrix, with  
+columns the i_th, j_th bin of a chromosom and the corresponding contact number; 
+2). a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of a chromosome;
+3). a text file name of the above two types of data}
+
+\item{index_file}{index file indicates the genomic coordinates for each bin (compatible with HiC-Pro);
+default NULL; when index file was given, multiple chromosomes input was supported and the hic_mat should be consistent with index_file}
 
 \item{resl}{The resolution (bin size), default 10kb}
 

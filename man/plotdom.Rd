@@ -4,7 +4,8 @@
 \alias{plotdom}
 \title{visualize hierarchical domains}
 \usage{
-plotdom(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl = 10000)
+plotdom(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20,
+  resl = 10000)
 }
 \arguments{
 \item{hic_dat}{hic contact matrix for a given chromosome, either a n by n matrix, or a 3 columns data.frame

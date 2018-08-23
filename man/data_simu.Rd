@@ -4,7 +4,8 @@
 \alias{data_simu}
 \title{generate simulated hic_mat and true tads}
 \usage{
-data_simu(stype = "poisson-dist", nratio = 2.5, mu0 = 200, resl = 1)
+data_simu(stype = "poisson-dist", nratio = 2.5, mu0 = 200,
+  resl = 1)
 }
 \arguments{
 \item{stype}{One of four types of simulated data in the manuscript:

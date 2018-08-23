@@ -18,19 +18,24 @@ Download source codes in [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLh
 Download source codes [here](https://www.dropbox.com/sh/27es1vimtf5745t/AADLhBXE_wgrUIlnDS0LWpqYa?dl=0) (previous versions are also included)
 >>>>>>> b2edc126ccc2756eec15dd418b602f56e9221c2b
 ```
-install.packages('path to rGMAP_1.3.tar.gz', type = 'source', rep = NULL)
+install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 ```
 ## Usage
-* Input:
-  - The Input is either a 3 columns (*i j count*) Hi-C map for a given chromosome, corrsponding to the i_th bin, j_th bin for the chromosome and the contact number for a contact; **note that the first two columns should be integer and in units of bin.**
-  - Or a n by n contact matrix, n is the total number of bins for a chromosome
+* Input *hic_mat* supports three types of format: 
+  - 1). a 3-column Hi-C contact matrix, corresponding to the i_th, j_th bin of a chromosom and the contact number; 
+  - 2). a n by n matrix, with (i,j) th element corresponding to contact number between the i_th and j_th bin of a chromosome;
+  - 3). a text file name of the above two types of data
+  
+* If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix
+and index file of HiC-Pro.
+
 
 * Output:
   - data frames providing the coordinates of the identified hierarchical domains
   - the final parameters for calling TADs
 
 ## Vignette
-* Detailed [vignette](https://www.dropbox.com/s/n0bsr80fvmi1tp4/rGMAP-vignette.html?dl=0) for the latest version 1.3.
+* Detailed [vignette](https://www.dropbox.com/s/n0bsr80fvmi1tp4/rGMAP-vignette.html?dl=0) for the latest version 1.3.1.
 
 ## A quick example
 * A quick instruction and example:
