@@ -19,12 +19,12 @@ and In R type:
 install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 ```
 ## Input
-* A HiC contact matrix *hic_mat* supports three types of format: 
+* For a single chromosome, a HiC contact matrix *hic_mat* supports three types of format: 
   1. a 3-column Hi-C contact matrix, corresponding to the i_th, j_th bin of a chromosom and the contact number; 
   2. a n by n matrix, with (i,j) th element corresponding to contact number between the i_th and j_th bin of a chromosome;
   3. a tab or space delimited text file of the above two types of data
   
-* If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix and index file of HiC-Pro.
+* For multiple chromosomes, a genomic coordinate index file *index_file* for HiC bin was needed. In this case, *hic_mat* and *index_file* are compatible with HiC-Pro stype HiC matrix and index files:
 
   - An example of *index_file (chromosome start end id)* in 10kb resolution:
 
@@ -46,7 +46,7 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 
 
 ## Output
-  * data frames providing the coordinates of the identified hierarchical domains
+  * data frames providing the genomic coordinates of the identified hierarchical domains
   * the final parameters for calling TADs
 
 ## Vignette

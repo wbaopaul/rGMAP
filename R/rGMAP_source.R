@@ -888,12 +888,17 @@ rGMAP_singChr = cmpfun(rGMAP_singChr)
 
 
 #' Detect hierarchical choromotin domains by GMAP
-#' @param  hic_mat supports three types of format: 
-#' 1). a 3-column Hi-C contact matrix, with  
-#' columns the i_th, j_th bin of a chromosom and the corresponding contact number; 
-#' 2). a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of a chromosome;
-#' 3). a text file name of the above two types of data
-#' @param  index_file index file indicates the genomic coordinates for each bin (compatible with HiC-Pro);
+#' @param  hic_mat 
+#' * For single chromosome, supports three types of format: 
+#'   - a 3-column Hi-C contact matrix, with  
+#' columns the i_th, j_th bin of a chromosom and the corresponding contact number
+#'   - a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of the chromosome
+#'   - a text file of the above two types of data
+#' * For multiple chromosomes, a index_file indicates genomic coordinate for each hic bin should be provided
+#' @md
+#' @param  index_file A 4-columns tab/space delimited text file indicates the genomic coordinates for each bin (compatible with HiC-Pro); with columns 
+#' *bin_chr bin_start bin_end bin_id*
+#' @md
 #' default NULL; when index file was given, multiple chromosomes input was supported and the hic_mat should be consistent with index_file
 #' @param  resl The resolution (bin size), default 10kb
 #' @param logt Do log-transformation or not, default TRUE
