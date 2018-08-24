@@ -20,23 +20,23 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 ```
 ## Input
 * A HiC contact matrix *hic_mat* supports three types of format: 
-    1.  a 3-column Hi-C contact matrix, corresponding to the i_th, j_th bin of a chromosom and the contact number; 
-    2.  a n by n matrix, with (i,j) th element corresponding to contact number between the i_th and j_th bin of a chromosome;
-    3.  a text file name of the above two types of data
+  1. a 3-column Hi-C contact matrix, corresponding to the i_th, j_th bin of a chromosom and the contact number; 
+  2. a n by n matrix, with (i,j) th element corresponding to contact number between the i_th and j_th bin of a chromosome;
+  3. a tab or space delimited text file of the above two types of data
   
 * If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix
 and index file of HiC-Pro.
 
-* An example of *hic_mat* file:
+* An example of 3-column *hic_mat* file (*bin_i bin_j count*):
 
 ```
-10 11 1.15
-10 15 1.89
-15 20 2.20
+10	11	1.15
+10	15	1.89
+15	20	2.20
 ......
 ```
 
-* An example of *index_file*:
+* An example of *index_file (chromosome start end id*):
 
 ```
 chr1	0	10000	1
