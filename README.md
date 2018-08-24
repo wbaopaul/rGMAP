@@ -37,7 +37,7 @@ and index file of HiC-Pro.
 
 ```
 
-  * An example of *index_file (chromosome start end id*):
+	* An example of *index_file (chromosome start end id*):
 
 ```
 chr1	0	10000	1
