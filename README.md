@@ -37,12 +37,12 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 
   - An example of corresponding 3-column *hic_mat* file (*bin_i bin_j count*):
 
-```
-10	11	1.15
-10	15	1.89
-15	20	2.20
-......
-```
+  ```
+  10	11	1.15
+  10	15	1.89
+  15	20	2.20
+  ......
+  ```
 
 
 ## Output
