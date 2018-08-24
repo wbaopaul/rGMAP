@@ -26,15 +26,7 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
   
 * If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix and index file of HiC-Pro.
 
-  * An example of 3-column *hic_mat* file (*bin_i bin_j count*):
-
-```
-10	11	1.15
-10	15	1.89
-15	20	2.20
-......
-```
-  * An example of *index_file (chromosome start end id* in 10kb resolution):
+  - An example of *index_file (chromosome start end id)* in 10kb resolution:
 
 ```
 chr1	0	10000	1
@@ -42,6 +34,16 @@ chr1	10000	20000	2
 chr1	20000	30000	3
 ......
 ```
+
+  - An example of corresponding 3-column *hic_mat* file (*bin_i bin_j count*):
+
+```
+10	11	1.15
+10	15	1.89
+15	20	2.20
+......
+```
+
 
 ## Output
   * data frames providing the coordinates of the identified hierarchical domains
