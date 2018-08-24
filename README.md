@@ -24,23 +24,23 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
   2. a n by n matrix, with (i,j) th element corresponding to contact number between the i_th and j_th bin of a chromosome;
   3. a tab or space delimited text file of the above two types of data
   
-* If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix
-and index file of HiC-Pro.
+* If *index_file* was provided, inputs for multiple chromosomes are supported. In this case, *hic_mat* and *index_file* are compatible with the output matrix and index file of HiC-Pro.
 
-* An example of 3-column *hic_mat* file (*bin_i bin_j count*):
+  * An example of 3-column *hic_mat* file (*bin_i bin_j count*):
 
 ```
-10	11	1.15
-10	15	1.89
-15	20	2.20
+ 	10	11	1.15
+	10	15	1.89
+	15	20	2.20
 ......
+```
 
-* An example of *index_file (chromosome start end id* in 10kb resolution):
+  * An example of *index_file (chromosome start end id* in 10kb resolution):
 
 ```
-chr1	0	10000	1
-chr1	10000	20000	2
-chr1	20000	30000	3
+	chr1	0	10000	1
+	chr1	10000	20000	2
+	chr1	20000	30000	3
 ......
 ```
 
