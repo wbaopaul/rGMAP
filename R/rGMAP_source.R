@@ -995,12 +995,12 @@ rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_orde
     if(!is.null(hierTads)) setcolorder(hierTads, c('chr', 'start', 'end', 'dom_order'))
     if(!is.null(params)) setcolorder(params, c('chr', 'score', 'd', 'dp', 't1', 't2'))
     
-    output_lit = list('tads' = tads, 'hierTads' = hierTads, 'params' = params)
+    output_list = list('tads' = tads, 'hierTads' = hierTads, 'params' = params)
   }
   
   
   
-  message('All done')
+  message('All done!')
   return(output_list)
 }
 
