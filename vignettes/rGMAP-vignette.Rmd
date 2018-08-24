@@ -23,8 +23,8 @@ knitr::opts_chunk$set(
 * The detailed of the algorithm can be found in *Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535*
 
 # Update for this version
-* hic_mat could either be a data.frame/matrix or a text file for a Hi-C contact matrix
-* Support multiple chromosomes if index file was also provided. The index_file and hic_mat are compatible to output of HiC-Pro
+* The HiC contact matrix *hic_mat* could either be a data.frame/matrix or a tab/space delimited text file
+* Support multiple chromosomes if index file *index_file* was also provided. The *index_file* and *hic_mat* are compatible to output of HiC-Pro
 * If the input hic_mat is just from a sigle chromosome and no index_file was provided: the first two columns should be the i_th, j_th bin of the chromosome if hic_mat is in 3-column format (**i j count**)
 * n by n matrix of hic_mat is still supported, where n is the total number of bins of a hic contact map for a single chromosome
 
@@ -65,6 +65,18 @@ pp$p2
 
 
 ## Compatible with HiC-Pro output matrix and index file
+
+* The format of the index file (10kb for example):
+
+```
+chr1  0 10000	1
+chr1	10000	20000	2
+chr1	20000	30000	3
+chr1	30000	40000	4
+......
+
+```
+  
 * The format of the hic_mat data:
 
 ```
@@ -76,15 +88,7 @@ pp$p2
 
 ```
 
-* The format of the index file (10kb for example):
 
-```
-chr1	0	10000	1
-chr1	10000	20000	2
-chr1	20000	30000	3
-chr1	30000	40000	4
-......
-```
 
 
 ## Work on an simulated example
