@@ -28,12 +28,12 @@ install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 
   - An example of *index_file (chromosome start end id)* in 10kb resolution:
 
-```
-chr1	0	10000	1
-chr1	10000	20000	2
-chr1	20000	30000	3
-......
-```
+  ```
+  chr1	0	10000	1
+  chr1	10000	20000	2
+  chr1	20000	30000	3
+  ......
+  ```
 
   - An example of corresponding 3-column *hic_mat* file (*bin_i bin_j count*):
 
