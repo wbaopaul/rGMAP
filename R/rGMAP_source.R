@@ -942,7 +942,11 @@ rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_orde
 
   if(class(hic_mat) == 'character') {
      message('Read hic_mat...')
-     hic_mat = fread(hic_mat, header = F)
+     hic_file = hic_mat
+     hic_mat = fread(hic_file, header = F)
+     if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) hic_mat = data.table(read.table(hic_file, header = F))
+     if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) stop('Wrong dimension of data!')
+     
   }
   if(is.null(index_file)){
     message('Note that the input hic map should be just for a single chromosome, since no index_file was provided.')
