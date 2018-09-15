@@ -943,7 +943,7 @@ rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_orde
   if(class(hic_mat) == 'character') {
      message('Read hic_mat...')
      hic_file = hic_mat
-     hic_mat = fread(hic_file, header = F)
+     hic_mat = fread(hic_file)
      if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) hic_mat = data.table(read.table(hic_file, header = F))
      if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) stop('Wrong dimension of data!')
      
@@ -960,7 +960,7 @@ rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_orde
     if(!any(class(hic_mat) == 'data.table')) hic_mat = data.table(hic_mat)
     names(hic_mat) = c('n1', 'n2', 'counts')
     
-    index = fread(index_file, select = 1:4, header = F)
+    index = fread(index_file, select = 1:4)
     names(index) = c('chr', 'start', 'end', 'id')
     
     
