@@ -18,6 +18,10 @@ and In R type:
 ```
 install.packages('path to rGMAP_1.3.1.tar.gz', type = 'source', rep = NULL)
 ```
+
+## Note
+* The latest *rGMAP* needs R version 3.5.0 or later
+
 ## Input
 * For a single chromosome, a HiC contact matrix *hic_mat* supports three types of format: 
   1. a 3-column Hi-C contact matrix, corresponding to the i_th, j_th bin of a chromosom and the contact number; 
