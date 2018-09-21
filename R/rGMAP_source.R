@@ -1503,6 +1503,9 @@ refm_hic = cmpfun(refm_hic)
 plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl = 10000){
 
   if(dim(hic_dat)[1] == dim(hic_dat)[2]) hic_dat = data.table(refm_hic(hic_dat))
+  
+  if (ncol(hiertads_gmap) == 4) #if TADs called from multiple chromosomes, assuming the first col should be chr, cut it.
+    hiertads_gmap = hiertads_gmap[,-1]
 
   names(hiertads_gmap) = c('start', 'end', 'dom_order')
   names(hic_dat) = c('n1', 'n2', 'count')
