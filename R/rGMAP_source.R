@@ -1552,7 +1552,7 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl 
 
   ss = ifelse(resl == 1, 1, 10^6/resl)  ## plot in scale of mb
   xlab0 = ifelse(resl == 1, 'bin', 'Mb')
-  hdat$n1 = hdat$n1/ss
+  hdat$n1 = (hdat$n1 - as.numeric(as.vector(hic_dat[1, 1])) + 1)/ss
 
   orgPlot <- ggplot(data = hdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
     scale_colour_gradient(high = 'red', low = 'white') + xlim(min(hdat$n1), max(hdat$n1)) +
@@ -1567,7 +1567,8 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl 
 
 
 
-  orgWTad_horz <- function(xy, m = mm, M = MM){
+  orgWTad_horz <- function(xy, m = mm - as.numeric(as.vector(hic_dat[1, 1])) + 1
+                           , M = MM - as.numeric(as.vector(hic_dat[1, 1])) + 1){
     ind1 = which(xy[, 1]>= m & xy[, 1]<= M)
     if(length(ind1) <= 1) return(NULL)
     xy = xy[ind1, ]
