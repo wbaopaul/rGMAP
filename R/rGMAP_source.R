@@ -764,8 +764,13 @@ rGMAP_singChr <- function(hic_mat, resl = 10*10^3, logt = T, dom_order = 2,
     hic_mat = log2(hic_mat + 1)
   }
   
-  
+  if(min_d >= nn){
+    min_d = floor(nn/2)
+    max_d = floor(nn/4*3)
+  }
   if(max_d > maxDistInBin) max_d = maxDistInBin
+  if(max_d < min_d) max_d = min_d
+  
   message(">>>> call TADs...")
   res = call_domain(hic_mat, max_d, min_d, max_dp, min_dp, hthr, maxDistInBin, t1thr)
   tads = res$tads
@@ -888,18 +893,13 @@ rGMAP_singChr = cmpfun(rGMAP_singChr)
 
 
 #' Detect hierarchical choromotin domains by GMAP
-#' @param  hic_mat 
-#' * For single chromosome, supports three types of format: 
-#'   - a 3-column Hi-C contact matrix, with  
-#' columns the i_th, j_th bin of a chromosom and the corresponding contact number
-#'   - a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of the chromosome
-#'   - a text file of the above two types of data
-#' * For multiple chromosomes, a index_file indicates genomic coordinate for each hic bin should be provided
+#' @param  hic_obj HiC contact matrix, generally either a 3-column data frame/data table or a tab/space delimited text file,
+#'  corresponding to the i_th, j_th bin of a chromosome and the contact frequency
+#' * For single chromosome, could also be a n by n matrix 
+#' * For multiple chromosomes, an index_obj indicates genomic coordinate for each hic bin should be provided
 #' @md
-#' @param  index_file A 4-columns tab/space delimited text file indicates the genomic coordinates for each bin (compatible with HiC-Pro); with columns 
-#' *bin_chr bin_start bin_end bin_id*
-#' @md
-#' default NULL; when index file was given, multiple chromosomes input was supported and the hic_mat should be consistent with index_file
+#' @param  index_obj A 4-columns tab/space delimited text file (or corresponding data frame/data table) indicates the genomic coordinates for each bin (compatible with HiC-Pro); with columns 
+#' *bin_chr bin_start bin_end bin_id*, default NULL; when index _obj was given, it should be consitent with hic_obj
 #' @param  resl The resolution (bin size), default 10kb
 #' @param logt Do log-transformation or not, default TRUE
 #' @param dom_order Maximum level of hierarchical structures, default 2 (call TADs and subTADs)
@@ -931,42 +931,46 @@ rGMAP_singChr = cmpfun(rGMAP_singChr)
 #'
 #' ## On an real data example
 #'hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
-#'res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+#'res = rGMAP(hic_rao_IMR90_chr15, NULL, resl = 10 * 1000, dom_order = 2)
 #'names(res)
 #' #quickly visualize some hierarchical domains
-#' pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 7000, 30, 10)
+#' pp = plotdom(hic_rao_IMR90_chr15, NULL, res$hierTads, NULL, 6000, 7000, 30, 10)
 #' pp$p2
-rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_order = 2,
+rGMAP <- function(hic_obj, index_obj = NULL, resl = 10*10^3, logt = T, dom_order = 2,
                   maxDistInBin = min(200, 2*10^6/resl), min_d = 25, max_d = 100,
                   min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5){
 
-  if(class(hic_mat) == 'character') {
-     message('Read hic_mat...')
-     hic_file = hic_mat
-     hic_mat = fread(hic_file)
-     if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) hic_mat = data.table(read.table(hic_file, header = F))
-     if(ncol(hic_mat) != 3 & nrow(hic_mat) != ncol(hic_mat)) stop('Wrong dimension of data!')
+  if(class(hic_obj)[1] == 'character') {
+     message('Read hic_obj...')
+     hic_file = hic_obj
+     hic_obj = fread(hic_file)
+     if(ncol(hic_obj) != 3 & nrow(hic_obj) != ncol(hic_obj)) hic_obj = data.table(read.table(hic_file, header = F))
+     if(ncol(hic_obj) != 3 & nrow(hic_obj) != ncol(hic_obj)) stop('Wrong dimension of data!')
      
   }
-  if(is.null(index_file)){
-    message('Note that the input hic map should be just for a single chromosome, since no index_file was provided.')
-    output_list = rGMAP_singChr(hic_mat, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
+  if(is.null(index_obj)){
+    message('Note that the input hic map should be just for a single chromosome, since no index_obj was provided.')
+    output_list = rGMAP_singChr(hic_obj, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
           min_dp, max_dp, hthr, t1thr)
   }
   
   
-  if(!is.null(index_file)){
-    if(ncol(hic_mat) != 3) stop('The input hic_mat should be in 3-column data frame format!')
-    if(!any(class(hic_mat) == 'data.table')) hic_mat = data.table(hic_mat)
-    names(hic_mat) = c('n1', 'n2', 'counts')
+  if(!is.null(index_obj)){
+    if(ncol(hic_obj) != 3) stop('The input hic_obj should be in 3-column data frame format!')
+    if(!any(class(hic_obj) == 'data.table')) hic_obj = data.table(hic_obj)
+    names(hic_obj) = c('n1', 'n2', 'counts')
     
-    index = fread(index_file, select = 1:4)
+    if(class(index_obj)[1] == 'character'){
+      index = fread(index_obj, select = 1:4)
+    }else{
+      index = data.table(index_obj)
+    }
     names(index) = c('chr', 'start', 'end', 'id')
     
     
-    if(any(!hic_mat$n1 %in% index$id) || any(!hic_mat$n2 %in% index$id)){
-      stop('The hic_mat was not consistent with the index file: 
-           all bin ids in the hic_mat should be included in the index file!')
+    if(any(!hic_obj$n1 %in% index$id) || any(!hic_obj$n2 %in% index$id)){
+      stop('The hic_obj was not consistent with the index file: 
+           all bin ids in the hic_obj should be included in the index file!')
     }
     index = index[chr != 'chrM']
     chrs = unique(index$chr)
@@ -975,15 +979,15 @@ rGMAP <- function(hic_mat, index_file = NULL, resl = 10*10^3, logt = T, dom_orde
     params = list()
     
     for(chr0 in chrs){
-      # extract hic_mat for chr0
+      # extract hic_obj for chr0
       message(paste('Working on chromosome', chr0, '...'))
       index0 = index[chr == chr0]
-      hic_mat0 = hic_mat[n1 %in% index0$id & n2 %in% index0$id]
+      hic_obj0 = hic_obj[n1 %in% index0$id & n2 %in% index0$id]
       id0 = min(index0$id)
-      hic_mat0[, 'n1' := n1 - id0 + 1]
-      hic_mat0[, 'n2' := n2 - id0 + 1]
-      if(nrow(hic_mat0) <= 20) next
-      res = rGMAP_singChr(hic_mat0, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
+      hic_obj0[, 'n1' := n1 - id0 + 1]
+      hic_obj0[, 'n2' := n2 - id0 + 1]
+      if(nrow(hic_obj0) <= 20) next
+      res = rGMAP_singChr(hic_obj0, resl, logt, dom_order, maxDistInBin, min_d , max_d ,
                   min_dp, max_dp, hthr, t1thr)
       if(!is.null(res$tads)) res$tads$chr = chr0
       if(!is.null(res$hierTads)) res$hierTads$chr = chr0
@@ -1491,26 +1495,56 @@ refm_hic = cmpfun(refm_hic)
 
 
 #' visualize hierarchical domains
-#' @param  hic_dat hic contact matrix for a given chromosome, either a n by n matrix, or a 3 columns data.frame
-#' <bin1> <bin2> <counts>
-#' @param  hiertads_gmap the hierarchical domains called by GMAP
-#' @param start_bin the start bin of the genome
-#' @param end_bin the end bin of the genome
+#' @param  hic_obj the hic_obj in the same format as used for calling TADs
+#' @param index_obj the index_obj used for calling TADs
+#' @param  hiertads_gmap the hierarchical domains outputted by GMAP
+#' @param chr0 the selected single chromosome ('chr1' for example)
+#' @param start_bin the start bin of the selected chromosome
+#' @param end_bin the end bin of the selected chromosome
 #' @param cthr the upper bound count threshold for color, default 20
-#' @param resl reslution of Hi-C data, default 10000
+#' @param resl reslution of Hi-C data, default 10000, if resl=1, it works on simulated data
 #' @rdname plotdom
 #' @export
-plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl = 10000){
+plotdom <- function(hic_obj, index_obj = NULL, hiertads_gmap, chr0 = NULL, start_bin, end_bin, cthr = 20, resl = 10000){
 
-  if(dim(hic_dat)[1] == dim(hic_dat)[2]) hic_dat = data.table(refm_hic(hic_dat))
+  if(class(hic_obj)[1] == 'character') {
+    message('Read hic_obj...')
+    hic_file = hic_obj
+    hic_obj = fread(hic_file)
+    if(ncol(hic_obj) != 3 & nrow(hic_obj) != ncol(hic_obj)) hic_obj = data.table(read.table(hic_file, header = F))
+    if(ncol(hic_obj) != 3 & nrow(hic_obj) != ncol(hic_obj)) stop('Wrong dimension of data!')
+    
+  }
+  
+  # transfer the n by n matrix to 3-column data table
+  if(dim(hic_obj)[1] == dim(hic_obj)[2]) hic_obj = data.table(refm_hic(hic_obj))
+  
+  if(!any(class(hic_obj) == 'data.table')) hic_obj = data.table(hic_obj)
   
   if (ncol(hiertads_gmap) == 4) #if TADs called from multiple chromosomes, assuming the first col should be chr, cut it.
-    hiertads_gmap = hiertads_gmap[,-1]
-
+  {
+    if(is.null(chr0)) stop('should provided a selected chromosome')
+    hiertads_gmap = hiertads_gmap[chr == chr0]
+    hiertads_gmap = hiertads_gmap[, -1]
+  }
+  
+  if(!is.null(index_obj) & class(index_obj)[1] == 'character'){
+    index_obj = fread(index_obj, select = 1:4)
+    names(index_obj) = c('chr', 'start', 'end', 'id')
+  }
+  
   names(hiertads_gmap) = c('start', 'end', 'dom_order')
-  names(hic_dat) = c('n1', 'n2', 'count')
-
-
+  names(hic_obj) = c('n1', 'n2', 'count')
+  
+  
+  if(!is.null(index_obj)){
+    index_obj = index_obj[chr == chr0]
+    id0 = min(index_obj$id)
+    hic_obj = hic_obj[n1 %in% index_obj$id & n2 %in% index_obj$id]
+    hic_obj[, 'n1' := n1 - id0 + 1]
+    hic_obj[, 'n2' := n2 - id0 + 1]
+  }
+  
   tads_gmap = subset(hiertads_gmap, dom_order == 1, select = -dom_order)
   tadsL2 = subset(hiertads_gmap, dom_order == 2, select = -dom_order)
   tadsL3 = subset(hiertads_gmap, dom_order == 3, select = -dom_order)
@@ -1527,11 +1561,9 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl 
   if(nrow(tadsL3) > 0 )hxy_tadsL3 = transf_tad_horz(xy_tadsL3)
 
 
-  mm = start_bin
-  MM = end_bin
-  dat = data.frame(hic_dat)
-  pdat = subset(dat, n1<=MM & n1 >= mm & n2 <= MM & n2 >= mm)
-  pdat$count = ifelse(pdat$count >cthr, cthr, pdat$count)
+  dat = data.frame(hic_obj)
+  pdat = subset(dat, n1 <= end_bin & n1 >= start_bin & n2 <= end_bin & n2 >= start_bin)
+  pdat$count = ifelse(pdat$count > cthr, cthr, pdat$count)
 
   orgPlot <- ggplot(data = pdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
     scale_colour_gradient(high='red', low = 'white') + xlim(min(pdat$n1), max(pdat$n1))
@@ -1544,16 +1576,16 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl 
   hdat[, 1:2] = transf_tad_horz(as.matrix(hdat[, 1:2]))
 
   hdat = hdat[hdat$n2 <= 100, ]
-  #hdat$count = ifelse(hdat$count > 30, 30, hdat$count)
-
 
   cols = colorRampPalette(c("white", "red"))(2)
 
 
   ss = ifelse(resl == 1, 1, 10^6/resl)  ## plot in scale of mb
   xlab0 = ifelse(resl == 1, 'bin', 'Mb')
-  hdat$n1 = (hdat$n1 - as.numeric(as.vector(hic_dat[1, 1])) + 1)/ss
-
+  #hdat$n1 = (hdat$n1 - as.numeric(as.vector(hic_obj[1, 1])) + 1)/ss
+  hdat$n1 = (hdat$n1)/ss
+  
+  
   orgPlot <- ggplot(data = hdat, aes(n1, n2)) + geom_point(aes(colour = count)) +
     scale_colour_gradient(high = 'red', low = 'white') + xlim(min(hdat$n1), max(hdat$n1)) +
     xlab(xlab0) + ylab("") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
@@ -1567,8 +1599,8 @@ plotdom <- function(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20, resl 
 
 
 
-  orgWTad_horz <- function(xy, m = mm - as.numeric(as.vector(hic_dat[1, 1])) + 1
-                           , M = MM - as.numeric(as.vector(hic_dat[1, 1])) + 1){
+  orgWTad_horz <- function(xy, m = start_bin
+                           , M = end_bin ){
     ind1 = which(xy[, 1]>= m & xy[, 1]<= M)
     if(length(ind1) <= 1) return(NULL)
     xy = xy[ind1, ]

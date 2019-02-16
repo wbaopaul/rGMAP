@@ -4,22 +4,25 @@
 \alias{plotdom}
 \title{visualize hierarchical domains}
 \usage{
-plotdom(hic_dat, hiertads_gmap, start_bin, end_bin, cthr = 20,
-  resl = 10000)
+plotdom(hic_obj, index_obj = NULL, hiertads_gmap, chr0 = NULL,
+  start_bin, end_bin, cthr = 20, resl = 10000)
 }
 \arguments{
-\item{hic_dat}{hic contact matrix for a given chromosome, either a n by n matrix, or a 3 columns data.frame
-<bin1> <bin2> <counts>}
+\item{hic_obj}{the hic_obj in the same format as used for calling TADs}
 
-\item{hiertads_gmap}{the hierarchical domains called by GMAP}
+\item{index_obj}{the index_obj used for calling TADs}
 
-\item{start_bin}{the start bin of the genome}
+\item{hiertads_gmap}{the hierarchical domains outputted by GMAP}
 
-\item{end_bin}{the end bin of the genome}
+\item{chr0}{the selected single chromosome ('chr1' for example)}
+
+\item{start_bin}{the start bin of the selected chromosome}
+
+\item{end_bin}{the end bin of the selected chromosome}
 
 \item{cthr}{the upper bound count threshold for color, default 20}
 
-\item{resl}{reslution of Hi-C data, default 10000}
+\item{resl}{reslution of Hi-C data, default 10000, if resl=1, it works on simulated data}
 }
 \description{
 visualize hierarchical domains

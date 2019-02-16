@@ -4,24 +4,20 @@
 \alias{rGMAP}
 \title{Detect hierarchical choromotin domains by GMAP}
 \usage{
-rGMAP(hic_mat, index_file = NULL, resl = 10 * 10^3, logt = T,
+rGMAP(hic_obj, index_obj = NULL, resl = 10 * 10^3, logt = T,
   dom_order = 2, maxDistInBin = min(200, 2 * 10^6/resl), min_d = 25,
   max_d = 100, min_dp = 5, max_dp = 10, hthr = 0.95, t1thr = 0.5)
 }
 \arguments{
-\item{hic_mat}{\itemize{
-\item For single chromosome, supports three types of format:
+\item{hic_obj}{HiC contact matrix, generally either a 3-column data frame/data table or a tab/space delimited text file,
+corresponding to the i_th, j_th bin of a chromosome and the contact frequency
 \itemize{
-\item a 3-column Hi-C contact matrix, with
-columns the i_th, j_th bin of a chromosom and the corresponding contact number
-\item a n by n matrix, with <i,j>th element corresponding to contact number between the i_th and j_th bin of the chromosome
-\item a text file of the above two types of data
-}
-\item For multiple chromosomes, a index_file indicates genomic coordinate for each hic bin should be provided
+\item For single chromosome, could also be a n by n matrix
+\item For multiple chromosomes, an index_obj indicates genomic coordinate for each hic bin should be provided
 }}
 
-\item{index_file}{A 4-columns tab/space delimited text file indicates the genomic coordinates for each bin (compatible with HiC-Pro); with columns
-\emph{bin_chr bin_start bin_end bin_id}}
+\item{index_obj}{A 4-columns tab/space delimited text file (or corresponding data frame/data table) indicates the genomic coordinates for each bin (compatible with HiC-Pro); with columns
+\emph{bin_chr bin_start bin_end bin_id}, default NULL; when index _obj was given, it should be consitent with hic_obj}
 
 \item{resl}{The resolution (bin size), default 10kb}
 
@@ -67,9 +63,9 @@ predicted_domains
 
 ## On an real data example
 hic_rao_IMR90_chr15   # normalized Hi-C data for IMR90, chr15 with resolution 10kb
-res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+res = rGMAP(hic_rao_IMR90_chr15, NULL, resl = 10 * 1000, dom_order = 2)
 names(res)
 #quickly visualize some hierarchical domains
-pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 6000, 7000, 30, 10)
+pp = plotdom(hic_rao_IMR90_chr15, NULL, res$hierTads, NULL, 6000, 7000, 30, 10)
 pp$p2
 }

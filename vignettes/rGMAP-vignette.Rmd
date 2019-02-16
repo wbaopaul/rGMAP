@@ -1,7 +1,7 @@
 ---
 title: "Vignette of rGMAP package"
 author: "Wenbao Yu"
-date: "rGMAP version 1.3.1 <br><br>Updated on `r Sys.Date()`"
+date: "rGMAP version 1.4 <br><br>Updated on `r Sys.Date()`"
 output: BiocStyle::html_document
 mainfont: Arial
 vignette: >
@@ -22,11 +22,13 @@ knitr::opts_chunk$set(
 * rGMAP is an R package for implementing GMAP algorithm for detecting topologically associating domains (TADs) and sub-domains (sub-TADs)
 * The detailed of the algorithm can be found in *Yu, W., He, B., & Tan, K. (2017). Identifying topologically associating domains and subdomains by Gaussian Mixture model And Proportion test. Nature Communications, 8, 535*
 
-# Update for this version
-* The HiC contact matrix *hic_mat* could either be a data.frame/matrix or a tab/space delimited text file
-* Support multiple chromosomes if index file *index_file* was also provided. The *index_file* and *hic_mat* are compatible to output of HiC-Pro
-* If the input hic_mat is just from a sigle chromosome and no index_file was provided: the first two columns should be the i_th, j_th bin of the chromosome if hic_mat is in 3-column format (**i j count**)
-* n by n matrix of hic_mat is still supported, where n is the total number of bins of a hic contact map for a single chromosome
+# Updates
+* The inputs of *rGMAP* function support both data frame/data table and tab/space delimited text file for both *hic_obj* and *index_obj*, and are consitent with the inputs of *plotdom* function
+* n by n matrix of *hic_obj* is still supported, where n is the total number of bins of a hic contact map for a single chromosome
+
+# Note
+* The index file *index_obj* was required in multiple chromosome mode
+* If the input *hic_obj* is just from a sigle chromosome and no index_file was provided: the first two columns should be the i_th, j_th bin of the chromosome if *hic_obj* is in 3-column format (**i j count**)
 
 
 
@@ -41,7 +43,7 @@ install_github('wbaopaul/rGMAP')
 ## Install from source codes
 ```{r, eval=F}
 
-install.packages('path to rGMAP_1.3.1.tar.gz', repos = NULL, type = 'source')
+install.packages('path to rGMAP_1.4.tar.gz', repos = NULL, type = 'source')
 
 ```
 
@@ -54,11 +56,11 @@ install.packages('path to rGMAP_1.3.1.tar.gz', repos = NULL, type = 'source')
 ```{r, fig.height=3, fig.width=15, fig.align='center'}
 library(rGMAP)
 hic_rao_IMR90_chr15   
-res = rGMAP(hic_rao_IMR90_chr15, resl = 10 * 1000, dom_order = 2)
+res = rGMAP(hic_rao_IMR90_chr15, index_obj = NULL, resl = 10 * 1000, dom_order = 2)
 names(res)
 
 #quickly visualize some hierarchical domains
-pp = plotdom(hic_rao_IMR90_chr15, res$hierTads, 5950, 6900, 30, 10000)
+pp = plotdom(hic_rao_IMR90_chr15, index_obj = NULL, res$hierTads, chr0 = NULL, 5950, 6900, 30, 10000)
 pp$p2
 
 ```
