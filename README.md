@@ -12,7 +12,7 @@ install_github("wbaopaul/rGMAP")
 
 ## Install from source codes
 
-* Download source codes [here](https://www.dropbox.com/s/6nru0gfaogdu48d/rGMAP_1.3.1.tar.gz?dl=0) 
+* Download source codes [here](https://www.dropbox.com/s/f2p9x7r98u6d285/rGMAP_1.4.tar.gz?dl=0) 
 and In R type:
  
 ```
