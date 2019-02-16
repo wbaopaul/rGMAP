@@ -34,7 +34,7 @@ knitr::opts_chunk$set(
 
 # Installation
 ## Install from Github
-```{r}
+```{r, eval=F}
 library(devtools)
 install_github('wbaopaul/rGMAP')
 
@@ -101,7 +101,7 @@ true_domains = simu_res$hierTads
 simu_mat = simu_res$hic_mat
 predicted_domains = rGMAP(simu_mat, resl = 1)$hierTads
 
-pp = plotdom(simu_mat, predicted_domains, 1, 1000, 20, 1)
+pp = plotdom(simu_mat, NULL, predicted_domains, NULL, 1, 1000, 20, resl = 1)
 pp$p2
 
 #true_domains
@@ -113,5 +113,5 @@ pp$p2
 
 # Session Information
 ```{r}
-session_info()
+devtools::session_info()
 ```
