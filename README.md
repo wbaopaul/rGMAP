@@ -84,6 +84,10 @@ help(plotdom)
 
 ```
 
+## Run in Docker
+
+A dockerized commad line version was posted [Here](https://hub.docker.com/r/wbaopaul/rgmap)
+
 ## Reference
 The detailed information of GMAP algorithm is described in the following paper:
 
