@@ -71,7 +71,7 @@ cal_stat <- function(pp, d = 50){
   p0 = (n_down * prop_down + n_up * prop_up)/(n_up + n_down)
   serror = sqrt(p0 * (1-p0) * (1/(n_up) + 1/n_down))
   test = (prop_up - prop_down)/serror
-  test[serror == 0] = 100L
+  test[serror == 0] = 0L
 
   stat_up = pmax(0, test)
   stat_down = pmax(0, -test)
